@@ -25,6 +25,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "lcd.h"
+#include "lps25hb.h"
+#include <stdio.h>
+#include "hagl.h"
+#include "font6x9.h"
+#include <wchar.h>
 
 /* USER CODE END Includes */
 
@@ -35,6 +41,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define MAXTXTLEN	100
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -91,6 +98,10 @@ int main(void)
   MX_SPI2_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  printf("UART initlized\r\n");
+  lps_init();
+  printf("Current temperature= %f\r\n", lps_read_temperature(U_CELSIUS));
+  lcd_init();
 
   /* USER CODE END 2 */
 
@@ -101,6 +112,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	lcd_fill_box(0,0,50,50, BLACK);
+
+	wchar_t text[MAXTXTLEN];
+	swprintf(text, MAXTXTLEN, L"Current temperature: %f C", lps_read_temperature(U_CELSIUS));
+	hagl_put_text(text, 5, 50, RED, font6x9);
+	HAL_Delay(500);
   }
   /* USER CODE END 3 */
 }
