@@ -7,6 +7,8 @@
 C_SRCS += \
 ../Core/Src/gpio.c \
 ../Core/Src/i2c.c \
+../Core/Src/icons.c \
+../Core/Src/iwdg.c \
 ../Core/Src/lcd.c \
 ../Core/Src/lps25hb.c \
 ../Core/Src/main.c \
@@ -21,6 +23,8 @@ C_SRCS += \
 OBJS += \
 ./Core/Src/gpio.o \
 ./Core/Src/i2c.o \
+./Core/Src/icons.o \
+./Core/Src/iwdg.o \
 ./Core/Src/lcd.o \
 ./Core/Src/lps25hb.o \
 ./Core/Src/main.o \
@@ -35,6 +39,8 @@ OBJS += \
 C_DEPS += \
 ./Core/Src/gpio.d \
 ./Core/Src/i2c.d \
+./Core/Src/icons.d \
+./Core/Src/iwdg.d \
 ./Core/Src/lcd.d \
 ./Core/Src/lps25hb.d \
 ./Core/Src/main.d \
@@ -54,7 +60,7 @@ Core/Src/%.o Core/Src/%.su: ../Core/Src/%.c Core/Src/subdir.mk
 clean: clean-Core-2f-Src
 
 clean-Core-2f-Src:
-	-$(RM) ./Core/Src/gpio.d ./Core/Src/gpio.o ./Core/Src/gpio.su ./Core/Src/i2c.d ./Core/Src/i2c.o ./Core/Src/i2c.su ./Core/Src/lcd.d ./Core/Src/lcd.o ./Core/Src/lcd.su ./Core/Src/lps25hb.d ./Core/Src/lps25hb.o ./Core/Src/lps25hb.su ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/spi.d ./Core/Src/spi.o ./Core/Src/spi.su ./Core/Src/stm32l4xx_hal_msp.d ./Core/Src/stm32l4xx_hal_msp.o ./Core/Src/stm32l4xx_hal_msp.su ./Core/Src/stm32l4xx_it.d ./Core/Src/stm32l4xx_it.o ./Core/Src/stm32l4xx_it.su ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su ./Core/Src/system_stm32l4xx.d ./Core/Src/system_stm32l4xx.o ./Core/Src/system_stm32l4xx.su ./Core/Src/usart.d ./Core/Src/usart.o ./Core/Src/usart.su
+	-$(RM) ./Core/Src/gpio.d ./Core/Src/gpio.o ./Core/Src/gpio.su ./Core/Src/i2c.d ./Core/Src/i2c.o ./Core/Src/i2c.su ./Core/Src/icons.d ./Core/Src/icons.o ./Core/Src/icons.su ./Core/Src/iwdg.d ./Core/Src/iwdg.o ./Core/Src/iwdg.su ./Core/Src/lcd.d ./Core/Src/lcd.o ./Core/Src/lcd.su ./Core/Src/lps25hb.d ./Core/Src/lps25hb.o ./Core/Src/lps25hb.su ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/spi.d ./Core/Src/spi.o ./Core/Src/spi.su ./Core/Src/stm32l4xx_hal_msp.d ./Core/Src/stm32l4xx_hal_msp.o ./Core/Src/stm32l4xx_hal_msp.su ./Core/Src/stm32l4xx_it.d ./Core/Src/stm32l4xx_it.o ./Core/Src/stm32l4xx_it.su ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su ./Core/Src/system_stm32l4xx.d ./Core/Src/system_stm32l4xx.o ./Core/Src/system_stm32l4xx.su ./Core/Src/usart.d ./Core/Src/usart.o ./Core/Src/usart.su
 
 .PHONY: clean-Core-2f-Src
 

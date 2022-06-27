@@ -13,9 +13,7 @@
  *
  * 	*/
 
-//#include "stm32f4xx.h"
-
-#include <stm32l4xx.h>
+#include "stm32l4xx.h"
 
 #ifndef INC_LPS25HB_H_
 #define INC_LPS25HB_H_
@@ -27,8 +25,8 @@
 /**
  * \brief Wybudza urządzenie i inicjuje konfigurację pomiaru ciśnienia i temperatury
  *
- * 		  Wyburza urządzenie (bit ODR2), ustawia w konfigurację pomiaru:
- * 		  Pressure(25Hz) i Temperature 25Hz. Więcej w dokumentacji LPS25HB (bity ODR1 i ODR0)
+ * 		  Wyburza urządzenie (bit ODR2), ustawia konfigurację pomiaru:
+ * 		  Pressure 25Hz i Temperature 25Hz. Więcej w dokumentacji LPS25HB (bity ODR1 i ODR0)
  * 		  Więcej informacji w dokumentacji LPS25HB s.35
  */
 void lps_init();
@@ -47,20 +45,43 @@ void lps_init();
 
 float lps_read_temperature(float temp_conv);
 
+/**
+ * \brief Kalibracja czujnika
+ *
+ * Czujnik wymaga kalibracji dla danej lokalizacji. Aby dokonac kalibracji nalezy odczytac z czujnika
+ * wskazanie cisnienia wzglednego (wyliczone cisnienie dla poziomu morza) oraz porownac je z cisnieniem
+ * wzglednym wzorcowym np. z prognozy pogody http://meteo.imgw.pl, roznice cisnien pomnozyc przez 16 i podac jako
+ * argument funkcji
+ *
+ * \param offset wartosc o jaka ma zostac skalibrownay czujnik cisnienia. Opis wyliczenia w opisie funkcji.
+ */
 void lps_pressure_correction(uint16_t offset);
 
+
 /**
- * \brief Odczytuje ciśnienie bezwzględne (w danym punkcie pomiarowym)
+ * \brief Odczytuje ciśnienie absolutne (lokalizacja na poziomie 93m)
+ *
+ * Przy innej lokalizacji
  */
+
 float lps_read_absolute_pressure();
 
 /**
- * \brief Odczytuje cisnienie wzgledne (zredukowane do poziomu morza)
+ * \brief Odczytuje cisnienie bezwzgledne (zredukowane do poziomu morza)
  *
  * \return Ciśnienie w hPa
  */
 float lps_read_relative_pressure();
 
-//float lps_calculate_altitude();
+
+/**
+ * \brief Wylicza wysokosc (za pomoca formuly hypsometrycznej)
+ *
+ * Szczegoly formuly pod linkiem: https://keisan.casio.com/has10/SpecExec.cgi?id=system/2006/1224585971
+ * Wyliczenie na podstawie odczytanej z czytnika temperatury i cisnienia wzglednego i bezwzglednego
+ *
+ * \return Wysokosc w m.n.p.m.
+ */
+float lps_get_altitude_hyps_f();
 
 #endif /* INC_LPS25HB_H_ */

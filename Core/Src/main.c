@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
+#include "iwdg.h"
 #include "spi.h"
 #include "usart.h"
 #include "gpio.h"
@@ -30,7 +31,10 @@
 #include <stdio.h>
 #include "hagl.h"
 #include "font6x9.h"
+#include "font5x8.h"
 #include <wchar.h>
+#include "icons.c"
+#include <math.h>
 
 /* USER CODE END Includes */
 
@@ -58,7 +62,7 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void checkFlags();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -97,13 +101,21 @@ int main(void)
   MX_I2C1_Init();
   MX_SPI2_Init();
   MX_USART1_UART_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
-  printf("UART initlized\r\n");
+  checkFlags();
   lps_init();
-  printf("Current temperature= %f\r\n", lps_read_temperature(U_CELSIUS));
+  lps_pressure_correction(48);
+  printf("\r\n\n *** URUCHOMIENIE URZADZENIA *** \r\n\n");
+  printf("UART pracuje poprawnie\r\n");
+  printf("Testowy odczyt temperatury= %.2f\r\n", lps_read_temperature(U_CELSIUS));
+  printf("Testowy odczyt cisnienia= %.2f\r\n", lps_read_relative_pressure());
+  printf("Testowy odczyt wysokosci= %.2f\r\n", lps_get_altitude_hyps_f());
   lcd_init();
+  hagl_init();
 
   /* USER CODE END 2 */
+  lcd_fill_box(0, 0, LCD_WIDTH, LCD_HEIGHT, BLACK);
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -112,13 +124,25 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	lcd_fill_box(0,0,50,50, BLACK);
 
-	wchar_t text[MAXTXTLEN];
-	swprintf(text, MAXTXTLEN, L"Current temperature: %f C", lps_read_temperature(U_CELSIUS));
-	hagl_put_text(text, 5, 50, RED, font6x9);
-	HAL_Delay(500);
+	// Konwersja tekstow do Wide Chara
+	wchar_t text[MAXTXTLEN], text2[MAXTXTLEN], text3[MAXTXTLEN];
+	swprintf(text, MAXTXTLEN, L"Temperatura: %.2f C", lps_read_temperature(U_CELSIUS));
+	swprintf(text2, MAXTXTLEN, L"Cisnienie: %.2f Hpa", lps_read_relative_pressure());
+	swprintf(text3, MAXTXTLEN, L"Wysokosc: %.0f m.n.p.m.", lps_get_altitude_hyps_f());
+
+	hagl_put_text(text, 30, 17, RED, font6x9);
+	hagl_put_text(text2, 30, 41, RED, font6x9);
+	hagl_put_text(text3, 30, 70, RED, font6x9);
+
+	lcd_draw_image_fast(2,5,24,24,temp_icon);
+	lcd_draw_image_fast(2,34,24,24,press_icon);
+	lcd_draw_image_fast(2,63,24,24,alt_icon);
+
+	HAL_IWDG_Refresh(&hiwdg);
+
   }
+  hagl_close();
   /* USER CODE END 3 */
 }
 
@@ -141,9 +165,10 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 1;
@@ -172,7 +197,14 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void checkFlags(){
+	if(__HAL_RCC_GET_FLAG(RCC_FLAG_IWDGRST)){
+			printf("System zostal zresetowany przez Watchdoga\r\n");
+			__HAL_RCC_CLEAR_RESET_FLAGS();
+		} else{
+			printf("System zostal uruchomiony poprawnie\r\n");
+		}
+}
 /* USER CODE END 4 */
 
 /**

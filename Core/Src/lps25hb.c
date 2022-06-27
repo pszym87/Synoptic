@@ -13,35 +13,43 @@
 #include <math.h>
 
 
-#define LPS25HB_ADDR	0xba
-#define REF_P_XL 		0x08	// Reference pressure register
-#define REF_P_L			0x09	// Reference pressure register
-#define REF_P_H			0x0A	// Reference pressure register
-#define	WHO_AM_I		0x0F	// Who am I register
-#define RES_CONF		0x10	// Resolution register
-#define CTRL_REG1		0x20	// Control register
-#define	CTRL_REG2		0x21	// Control register
-#define CTRL_REG3		0x22	// Control register
-#define CTRL_REG4		0x23	// Control register
-#define	INTERRUPT_CFG	0x24	// Interrupt register
-#define INT_SOURCE		0x25	// Interrupt register
-#define STATUS_REG		0x27	// Status register
-#define PRESS_OUT_XL	0x28	// Pressure output register
-#define PRESS_OUT_L		0x29	// Pressure output register
-#define PRESS_OUT_H		0x2A	// Pressure output register
-#define TEMP_OUT_L		0x2B	// Temperature output register
-#define TEMP_OUT_H		0x2C	// Temperature output register
-#define FIFO_CTRL		0x2E	// FIFO configure register
-#define FIFO_STATUS		0x2F	// FIFO configure register
-#define THS_P_L			0x30	// Pressure threshold register
-#define THS_P_H			0x31	// Pressure threshold register
-#define RPDS_L			0x39	// Pressure offset register
-#define RPDS_H			0x3A	// Pressure offset register
+#define LPS25HB_ADDR				0xBA	// Adres urzadzenia
+#define REF_P_XL 					0x08	// Reference pressure register
+#define REF_P_L						0x09	// Reference pressure register
+#define REF_P_H						0x0A	// Reference pressure register
+#define	WHO_AM_I					0x0F	// Who am I register
+#define RES_CONF					0x10	// Resolution register
+#define CTRL_REG1					0x20	// Control register
+#define	CTRL_REG2					0x21	// Control register
+#define CTRL_REG3					0x22	// Control register
+#define CTRL_REG4					0x23	// Control register
+#define	INTERRUPT_CFG				0x24	// Interrupt register
+#define INT_SOURCE					0x25	// Interrupt register
+#define STATUS_REG					0x27	// Status register
+#define PRESS_OUT_XL				0x28	// Pressure output register
+#define PRESS_OUT_L					0x29	// Pressure output register
+#define PRESS_OUT_H					0x2A	// Pressure output register
+#define TEMP_OUT_L					0x2B	// Temperature output register
+#define TEMP_OUT_H					0x2C	// Temperature output register
+#define FIFO_CTRL					0x2E	// FIFO configure register
+#define FIFO_STATUS					0x2F	// FIFO configure register
+#define THS_P_L						0x30	// Pressure threshold register
+#define THS_P_H						0x31	// Pressure threshold register
+#define RPDS_L						0x39	// Pressure offset register
+#define RPDS_H						0x3A	// Pressure offset register
+
+// Stałe symboliczne ulatwiajace ustawienia konkretnych rejestrow
+
+// CTRL_REG1
 #define SET_CTRL_REG1_PD			0x80
 #define SET_CTRL_REG1_ODR2			0x40
 #define SET_CTRL_REG1_ODR1			0x20
 #define SET_CTRL_REG1_ODR0			0x10
+
+// CTRL_REG2
 #define SET_CTRL_REG2_FIFO			0x40
+
+// FIFO_CTRL
 #define SET_FIFO_CTRL_MEAN_MODE		0xc0
 #define	SET_FIFO_CTRL_WTM_32_SMPL	0x0f
 
@@ -51,7 +59,7 @@
  *
  * \param	reg adres rejestru
  * \param	data byte danych do zapisania
- * \return
+ * \return	status transmisji
  *
  */
 static HAL_StatusTypeDef lps_write_to_reg(uint8_t reg, uint8_t data){
@@ -80,12 +88,13 @@ static HAL_StatusTypeDef lps_read_from_reg(uint8_t reg, uint8_t* data_ptr){
 }
 
 
-
 void lps_init(){
-	lps_write_to_reg(CTRL_REG1, 0xc0);
-	HAL_Delay(100);
+	// wlacz urzadzenie i ustaw czestotliwosc pomiaru na 25Hz
+	lps_write_to_reg(CTRL_REG1, SET_CTRL_REG1_PD|SET_CTRL_REG1_ODR2);
 
-	//Włączenie kolejki FIFO
+	// przy problemach z odczytem danych dodac oczekiwanie 100 ms
+
+	// aktywacja i ustawienie fifo dla pomiarow
 	lps_write_to_reg(CTRL_REG2,SET_CTRL_REG2_FIFO);
 	lps_write_to_reg(FIFO_CTRL, SET_FIFO_CTRL_MEAN_MODE|SET_FIFO_CTRL_WTM_32_SMPL);
 
@@ -106,8 +115,6 @@ float lps_read_temperature(float temp_conv){
 }
 
 void lps_pressure_correction(uint16_t offset){
-
-	//uint16_t offset = 16 * (lps_read_relative_pressure()-targetPressure);
 	lps_write_to_reg(RPDS_L, offset);
 	lps_write_to_reg(RPDS_H, offset >> 8);
 }
@@ -126,10 +133,22 @@ float lps_read_absolute_pressure(){
 }
 
 float lps_read_relative_pressure(){
-	const float h = 93; // wysokosc n.p.m.
-	float temp_K = lps_read_temperature(U_KELVIN); // temp_Kalvin
+	const float h = 93; // jesli inna wysokosc to zmienic;
+	float temp_K = lps_read_temperature(U_KELVIN);
 	float abs_press = lps_read_absolute_pressure();
 
 	return abs_press * exp(0.034162608734308*h / temp_K);
+}
+
+float lps_get_altitude_hyps_f(){
+
+	float p0 = lps_read_relative_pressure(); // sea-level pressure
+    float p = lps_read_absolute_pressure(); // pressure at location
+    float temp_K = lps_read_temperature(U_KELVIN);
+
+    float h = (( pow(p0/p, 1/5.257) - 1)*( temp_K ))/0.0065;
+
+   	return h;
+
 }
 
