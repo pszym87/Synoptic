@@ -114,7 +114,6 @@ int main(void)
   lcd_init();
   hagl_init();
 
-  /* USER CODE END 2 */
   lcd_fill_box(0, 0, LCD_WIDTH, LCD_HEIGHT, BLACK);
 
   // *** TESTOWY ZAPISU I ODCZYT TEMPERATURY Z PAMIECI EEPROM ***
@@ -136,6 +135,8 @@ int main(void)
   printf("EEPROM %d i %d i %d\n\r", data_rec[0], data_rec[1], data_rec[2]);
 
   // *** KONIEC TESTU Z EEPROM ***
+  /* USER CODE END 2 */
+
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
