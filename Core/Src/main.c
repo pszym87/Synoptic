@@ -117,6 +117,26 @@ int main(void)
   /* USER CODE END 2 */
   lcd_fill_box(0, 0, LCD_WIDTH, LCD_HEIGHT, BLACK);
 
+  // *** TESTOWY ZAPISU I ODCZYT TEMPERATURY Z PAMIECI EEPROM ***
+  float tempr = lps_read_temperature(U_CELSIUS);
+  uint8_t data_rec[2];
+
+  // zmien date float na dwa inty z czescia calkowita i dziesietna
+
+  uint8_t data[] = {(uint8_t)tempr, (uint8_t)(100*(tempr-(uint8_t)tempr))};
+
+  if(HAL_I2C_Mem_Write(&hi2c1, 0xa0, 0x20, I2C_MEMADD_SIZE_8BIT, data, sizeof data, HAL_MAX_DELAY) != HAL_OK)
+	  Error_Handler();
+
+  HAL_Delay(200);
+
+  if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, 0x20, I2C_MEMADD_SIZE_8BIT, data_rec, sizeof data_rec, HAL_MAX_DELAY) != HAL_OK)
+	 Error_Handler();
+
+  printf("EEPROM %d i %d i %d\n\r", data_rec[0], data_rec[1], data_rec[2]);
+
+  // *** KONIEC TESTU Z EEPROM ***
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
