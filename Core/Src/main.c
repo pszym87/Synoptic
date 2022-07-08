@@ -35,6 +35,7 @@
 #include <wchar.h>
 #include "icons.c"
 #include <math.h>
+#include <stdbool.h>
 
 /* USER CODE END Includes */
 
@@ -45,7 +46,12 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define MAXTXTLEN	100
+#define MAXTXTLEN			100
+#define HISTORY_NUMS 		5
+#define HISTORY_ROW_SIZE 	7
+#define MEM_MSRM_START		0x0
+#define EEPROM_PAGE_SIZE	8
+#define	EEPROM_END_OF_PAGE			'\0'
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -63,6 +69,12 @@
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 void checkFlags();
+void live_mode_prog();
+void history_mode_prog();
+void load_history_from_eeprom(uint8_t[]);
+void printHistory(uint8_t[]);
+void write_all_history_to_eeprom(uint8_t[]);
+void save_history_to_eeprom(uint8_t msrm[HISTORY_NUMS*HISTORY_ROW_SIZE]);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -77,7 +89,8 @@ void checkFlags();
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  typedef enum prog_mode {live_mode, history_mode} prog_mode_t;
+  prog_mode_t which_program = 1;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -116,23 +129,70 @@ int main(void)
 
   lcd_fill_box(0, 0, LCD_WIDTH, LCD_HEIGHT, BLACK);
 
+  uint8_t tmp_mes[HISTORY_NUMS*HISTORY_ROW_SIZE] =
+  	  	  	  	  	  { 101,102,103, 104, 105, 106, 107,
+  	  	  	  	  	    108,109,110, 111, 112, 113, 114,
+						115,116,117, 118, 119, 120, 121,
+						122,123,124, 125, 126, 127, 128,
+						129,130,131, 132, 133, 134, 135
+  	  	  	  	  	   };
+
+  uint8_t tmp_mes2[HISTORY_NUMS*HISTORY_ROW_SIZE];
+
+  // zapis do pamieci
+  //write_all_history_to_eeprom(tmp_mes);
+  HAL_Delay(200);
+
+  uint8_t tmp_da[7] = {99,98,97,95,94,93,92};
+  uint8_t tmp_dg[7] = {1,2,3,4,5,6,7};
+  uint8_t tmp_dr[7] = {200,201,202,203,204,205,206};
+  uint8_t tmp_ra[24];
+
+  // PAGE WRITE
+
+  /*
+  if(HAL_I2C_Mem_Write(&hi2c1, 0xa0, 0x0 , I2C_MEMADD_SIZE_8BIT, tmp_da , 7, HAL_MAX_DELAY) != HAL_OK)
+	  Error_Handler();
+  while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
+
+  if(HAL_I2C_Mem_Write(&hi2c1, 0xa0, 0x8 , I2C_MEMADD_SIZE_8BIT, tmp_dg , 7, HAL_MAX_DELAY) != HAL_OK)
+  	  Error_Handler();
+  while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
+
+  if(HAL_I2C_Mem_Write(&hi2c1, 0xa0, 0x10 , I2C_MEMADD_SIZE_8BIT, tmp_dg , 7, HAL_MAX_DELAY) != HAL_OK)
+    	  Error_Handler();
+    while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
+
+
+  if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, 0x0 , I2C_MEMADD_SIZE_8BIT, tmp_ra , 24, HAL_MAX_DELAY) != HAL_OK)
+			Error_Handler();
+  while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
+
+
+*/
+
+  printf("STOP\r\n");
+  save_history_to_eeprom(tmp_mes);
+  load_history_from_eeprom(tmp_mes2);
+  printHistory(tmp_mes2);
+
   // *** TESTOWY ZAPISU I ODCZYT TEMPERATURY Z PAMIECI EEPROM ***
-  float tempr = lps_read_temperature(U_CELSIUS);
-  uint8_t data_rec[2];
+  //float tempr = lps_read_temperature(U_CELSIUS);
+  //uint8_t data_rec[2];
 
   // zmien date float na dwa inty z czescia calkowita i dziesietna
 
-  uint8_t data[] = {(uint8_t)tempr, (uint8_t)(100*(tempr-(uint8_t)tempr))};
+  //uint8_t data[] = {(uint8_t)tempr, (uint8_t)(100*(tempr-(uint8_t)tempr))};
 
-  if(HAL_I2C_Mem_Write(&hi2c1, 0xa0, 0x20, I2C_MEMADD_SIZE_8BIT, data, sizeof data, HAL_MAX_DELAY) != HAL_OK)
-	  Error_Handler();
+  //if(HAL_I2C_Mem_Write(&hi2c1, 0xa0, 0x20, I2C_MEMADD_SIZE_8BIT, data, sizeof data, HAL_MAX_DELAY) != HAL_OK)
+//Error_Handler();
 
-  HAL_Delay(200);
+  //HAL_Delay(200);
 
-  if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, 0x20, I2C_MEMADD_SIZE_8BIT, data_rec, sizeof data_rec, HAL_MAX_DELAY) != HAL_OK)
-	 Error_Handler();
+  //if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, 0x20, I2C_MEMADD_SIZE_8BIT, data_rec, sizeof data_rec, HAL_MAX_DELAY) != HAL_OK)
+//	 Error_Handler();
 
-  printf("EEPROM %d i %d i %d\n\r", data_rec[0], data_rec[1], data_rec[2]);
+  //printf("EEPROM %d i %d i %d\n\r", data_rec[0], data_rec[1], data_rec[2]);
 
   // *** KONIEC TESTU Z EEPROM ***
   /* USER CODE END 2 */
@@ -140,25 +200,25 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	switch(which_program){
 
-	// Konwersja tekstow do Wide Chara
-	wchar_t text[MAXTXTLEN], text2[MAXTXTLEN], text3[MAXTXTLEN];
-	swprintf(text, MAXTXTLEN, L"Temperatura: %.2f C", lps_read_temperature(U_CELSIUS));
-	swprintf(text2, MAXTXTLEN, L"Cisnienie: %.2f Hpa", lps_read_relative_pressure());
-	swprintf(text3, MAXTXTLEN, L"Wysokosc: %.0f m.n.p.m.", lps_get_altitude_hyps_f());
+		case live_mode:
+			live_mode_prog();
+			break;
+		case history_mode:
+			history_mode_prog();
+			break;
 
-	hagl_put_text(text, 30, 17, RED, font6x9);
-	hagl_put_text(text2, 30, 41, RED, font6x9);
-	hagl_put_text(text3, 30, 70, RED, font6x9);
+	}
 
-	lcd_draw_image_fast(2,5,24,24,temp_icon);
-	lcd_draw_image_fast(2,34,24,24,press_icon);
-	lcd_draw_image_fast(2,63,24,24,alt_icon);
+
+	HAL_Delay(500);
 
 	HAL_IWDG_Refresh(&hiwdg);
 
@@ -218,6 +278,97 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void live_mode_prog(){
+
+	// Konwersja tekstow do Wide Chara
+	wchar_t text[MAXTXTLEN], text2[MAXTXTLEN], text3[MAXTXTLEN];
+	swprintf(text, MAXTXTLEN, L"Temperatura: %.2f C", lps_read_temperature(U_CELSIUS));
+	swprintf(text2, MAXTXTLEN, L"Cisnienie: %.2f Hpa", lps_read_relative_pressure());
+	swprintf(text3, MAXTXTLEN, L"Wysokosc: %.0f m.n.p.m.", lps_get_altitude_hyps_f());
+
+	hagl_put_text(text, 30, 17, RED, font6x9);
+	hagl_put_text(text2, 30, 41, RED, font6x9);
+	hagl_put_text(text3, 30, 70, RED, font6x9);
+
+	// nie mam ikon?
+	lcd_draw_image_fast(2,5,24,24,temp_icon);
+	lcd_draw_image_fast(2,34,24,24,press_icon);
+	lcd_draw_image_fast(2,63,24,24,alt_icon);
+
+
+
+	printf("Live mode prog\r\n");
+}
+void history_mode_prog(){
+
+	static bool historyLoaded;
+	static uint8_t msrm_history[HISTORY_NUMS*HISTORY_ROW_SIZE];
+
+	if(!historyLoaded){
+		load_history_from_eeprom(msrm_history);
+
+		printHistory(msrm_history);
+		historyLoaded = true;
+
+	} else if(historyLoaded){
+
+		for(int i=0; i<HISTORY_NUMS; i++){
+
+			int c = HISTORY_ROW_SIZE * i;
+			wchar_t text[MAXTXTLEN];
+			swprintf(text, MAXTXTLEN, L"%d/%d/%d: %d,%d C", msrm_history[c],msrm_history[c+1], msrm_history[c+2], msrm_history[c+3],
+																			 msrm_history[c+4], msrm_history[c+5], msrm_history[c+5],
+																			 msrm_history[c+6]);
+			hagl_put_text(text, 5, i*20, RED, font6x9);
+		}
+
+
+
+	}
+    //printf("History mode prog\r\n");
+}
+
+void load_history_from_eeprom(uint8_t msrm_history[HISTORY_NUMS*EEPROM_PAGE_SIZE]){
+	if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, MEM_MSRM_START, I2C_MEMADD_SIZE_8BIT, msrm_history, HISTORY_NUMS*HISTORY_ROW_SIZE, HAL_MAX_DELAY) != HAL_OK)
+							 Error_Handler();
+	while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
+}
+
+
+void save_history_to_eeprom(uint8_t msrm[HISTORY_NUMS*HISTORY_ROW_SIZE]){
+
+	// calculate number of full pages and size of the last page
+	int full_pages = HISTORY_ROW_SIZE*HISTORY_NUMS/EEPROM_PAGE_SIZE;
+	int last_page = HISTORY_ROW_SIZE*HISTORY_NUMS - full_pages*EEPROM_PAGE_SIZE;
+
+	// send full pages
+	for(int i=0; i<full_pages; i++){
+
+		if(HAL_I2C_Mem_Write(&hi2c1, 0xa0, MEM_MSRM_START+i*EEPROM_PAGE_SIZE, I2C_MEMADD_SIZE_8BIT, msrm+i*EEPROM_PAGE_SIZE, EEPROM_PAGE_SIZE, HAL_MAX_DELAY) != HAL_OK)
+			Error_Handler();
+		while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
+
+	}
+
+	// send remaining page (not full)
+	if(last_page >0){
+		if(HAL_I2C_Mem_Write(&hi2c1, 0xa0, MEM_MSRM_START+full_pages*EEPROM_PAGE_SIZE, I2C_MEMADD_SIZE_8BIT, msrm+full_pages*EEPROM_PAGE_SIZE, last_page, HAL_MAX_DELAY) != HAL_OK)
+			Error_Handler();
+		while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
+	}
+
+}
+
+
+void printHistory(uint8_t msrm_history[HISTORY_NUMS*EEPROM_PAGE_SIZE]){
+	for(int i=0; i<HISTORY_NUMS; i++){
+		for(int j=0; j<HISTORY_ROW_SIZE; j++){
+			printf("%d ", msrm_history[i+j]);
+		}
+		printf("\r\n");
+	}
+}
+
 void checkFlags(){
 	if(__HAL_RCC_GET_FLAG(RCC_FLAG_IWDGRST)){
 			printf("System zostal zresetowany przez Watchdoga\r\n");
