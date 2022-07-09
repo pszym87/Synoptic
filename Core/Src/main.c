@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "i2c.h"
 #include "iwdg.h"
 #include "spi.h"
@@ -52,6 +53,9 @@
 #define MEM_MSRM_START		0x0
 #define EEPROM_PAGE_SIZE	8
 #define	EEPROM_END_OF_PAGE			'\0'
+#define RX_BUF_SIZE		1
+#define SF_BUF_SIZE		100
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -62,7 +66,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t rx_buf[RX_BUF_SIZE];
+uint8_t sf_buf[SF_BUF_SIZE];
+uint8_t sf_buf_pos = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -75,6 +81,7 @@ void load_history_from_eeprom(uint8_t[]);
 void printHistory(uint8_t[]);
 void write_all_history_to_eeprom(uint8_t[]);
 void save_history_to_eeprom(uint8_t msrm[HISTORY_NUMS*HISTORY_ROW_SIZE]);
+void fflush_sc_buff();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -113,8 +120,9 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_SPI2_Init();
-  MX_USART1_UART_Init();
+  MX_DMA_Init();
   MX_IWDG_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   checkFlags();
   lps_init();
@@ -126,6 +134,8 @@ int main(void)
   printf("Testowy odczyt wysokosci= %.2f\r\n", lps_get_altitude_hyps_f());
   lcd_init();
   hagl_init();
+
+  HAL_UART_Receive_DMA(&huart1, rx_buf, 1);
 
   lcd_fill_box(0, 0, LCD_WIDTH, LCD_HEIGHT, BLACK);
 
@@ -139,37 +149,7 @@ int main(void)
 
   uint8_t tmp_mes2[HISTORY_NUMS*HISTORY_ROW_SIZE];
 
-  // zapis do pamieci
-  //write_all_history_to_eeprom(tmp_mes);
-  HAL_Delay(200);
 
-  uint8_t tmp_da[7] = {99,98,97,95,94,93,92};
-  uint8_t tmp_dg[7] = {1,2,3,4,5,6,7};
-  uint8_t tmp_dr[7] = {200,201,202,203,204,205,206};
-  uint8_t tmp_ra[24];
-
-  // PAGE WRITE
-
-  /*
-  if(HAL_I2C_Mem_Write(&hi2c1, 0xa0, 0x0 , I2C_MEMADD_SIZE_8BIT, tmp_da , 7, HAL_MAX_DELAY) != HAL_OK)
-	  Error_Handler();
-  while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
-
-  if(HAL_I2C_Mem_Write(&hi2c1, 0xa0, 0x8 , I2C_MEMADD_SIZE_8BIT, tmp_dg , 7, HAL_MAX_DELAY) != HAL_OK)
-  	  Error_Handler();
-  while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
-
-  if(HAL_I2C_Mem_Write(&hi2c1, 0xa0, 0x10 , I2C_MEMADD_SIZE_8BIT, tmp_dg , 7, HAL_MAX_DELAY) != HAL_OK)
-    	  Error_Handler();
-    while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
-
-
-  if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, 0x0 , I2C_MEMADD_SIZE_8BIT, tmp_ra , 24, HAL_MAX_DELAY) != HAL_OK)
-			Error_Handler();
-  while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
-
-
-*/
 
   printf("STOP\r\n");
   save_history_to_eeprom(tmp_mes);
@@ -197,7 +177,6 @@ int main(void)
   // *** KONIEC TESTU Z EEPROM ***
   /* USER CODE END 2 */
 
-
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
@@ -206,6 +185,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	fflush_sc_buff();
+
 	switch(which_program){
 
 		case live_mode:
@@ -377,6 +358,30 @@ void checkFlags(){
 			printf("System zostal uruchomiony poprawnie\r\n");
 		}
 }
+
+void fflush_sc_buff(){
+
+	if(sf_buf_pos>0){
+		sf_buf[sf_buf_pos] = '\0';
+		int i=0;
+		while(sf_buf[i]!='\0'){
+			if(sf_buf[i]=='\r') printf("\n");
+			printf("%c", sf_buf[i]);
+			i++;
+			fflush(stdout);
+		}
+		sf_buf_pos = 0;
+	}
+}
+
+
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+		sf_buf[sf_buf_pos] = rx_buf[0];
+		++sf_buf_pos;
+		HAL_UART_Receive_DMA(&huart1, rx_buf, 1);
+}
+
 /* USER CODE END 4 */
 
 /**
