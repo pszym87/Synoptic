@@ -21,6 +21,7 @@
 #include "dma.h"
 #include "i2c.h"
 #include "iwdg.h"
+#include "rtc.h"
 #include "spi.h"
 #include "usart.h"
 #include "gpio.h"
@@ -37,6 +38,7 @@
 #include "icons.c"
 #include <math.h>
 #include <stdbool.h>
+#include <string.h>
 
 /* USER CODE END Includes */
 
@@ -69,6 +71,8 @@
 uint8_t rx_buf[RX_BUF_SIZE];
 uint8_t sf_buf[SF_BUF_SIZE];
 uint8_t sf_buf_pos = 0;
+
+static char line[MAXTXTLEN];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -82,6 +86,13 @@ void printHistory(uint8_t[]);
 void write_all_history_to_eeprom(uint8_t[]);
 void save_history_to_eeprom(uint8_t msrm[HISTORY_NUMS*HISTORY_ROW_SIZE]);
 void fflush_sc_buff();
+void setDate(int dd, int mm, int yy);
+void setTime(int hh, int mm);
+void clrTxtBuff(char* str, int size);
+void prsCmd(char* cmd);
+void printDate();
+void printTime();
+void printMan();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -123,6 +134,7 @@ int main(void)
   MX_DMA_Init();
   MX_IWDG_Init();
   MX_USART1_UART_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
   checkFlags();
   lps_init();
@@ -149,32 +161,14 @@ int main(void)
 
   uint8_t tmp_mes2[HISTORY_NUMS*HISTORY_ROW_SIZE];
 
-
+setDate(9, 7, 22);
+setTime(14, 20);
 
   printf("STOP\r\n");
   save_history_to_eeprom(tmp_mes);
   load_history_from_eeprom(tmp_mes2);
   printHistory(tmp_mes2);
 
-  // *** TESTOWY ZAPISU I ODCZYT TEMPERATURY Z PAMIECI EEPROM ***
-  //float tempr = lps_read_temperature(U_CELSIUS);
-  //uint8_t data_rec[2];
-
-  // zmien date float na dwa inty z czescia calkowita i dziesietna
-
-  //uint8_t data[] = {(uint8_t)tempr, (uint8_t)(100*(tempr-(uint8_t)tempr))};
-
-  //if(HAL_I2C_Mem_Write(&hi2c1, 0xa0, 0x20, I2C_MEMADD_SIZE_8BIT, data, sizeof data, HAL_MAX_DELAY) != HAL_OK)
-//Error_Handler();
-
-  //HAL_Delay(200);
-
-  //if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, 0x20, I2C_MEMADD_SIZE_8BIT, data_rec, sizeof data_rec, HAL_MAX_DELAY) != HAL_OK)
-//	 Error_Handler();
-
-  //printf("EEPROM %d i %d i %d\n\r", data_rec[0], data_rec[1], data_rec[2]);
-
-  // *** KONIEC TESTU Z EEPROM ***
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -185,6 +179,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
 	fflush_sc_buff();
 
 	switch(which_program){
@@ -315,7 +310,19 @@ void load_history_from_eeprom(uint8_t msrm_history[HISTORY_NUMS*EEPROM_PAGE_SIZE
 	while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
 }
 
-
+/**
+ * \brief Zapisuje podana historie pomiarow w EEPROM
+ *
+ * Wykorzystuje stronicowanie przesylu informacji. EEPROM 24AA01 na 6 stronie datasheetu
+ * opisuje tryb stronicowania. Najwazniejsze ograniczenia to:
+ * - strona liczy do 8 byte'ow (tyle ma wewn. buffor pamieci)
+ * - jesli wysylane mniej niz 8 byte'ow to wskaznik kolejnej strony bedzie i tak wskazywal na 8 byte (wewn. inkremantacja o 8 byte'ow)
+ * - transmisje mozna zaczac tylko od 0x00 i kolejnych stron wskazywanych przez multiplikacje 8 byte'ów przez liczbe calkowita (nie mozna zaczac np. od adresu 0x1)
+ *
+ * Funkcja wysyla cala historie dzielac ja na pelne strony (8 byte'owe). Strona mniejsza niz 8 byte'ow wysylana jest na koncu.
+ *
+ * \param msrm tablica z pomiarami
+ */
 void save_history_to_eeprom(uint8_t msrm[HISTORY_NUMS*HISTORY_ROW_SIZE]){
 
 	// calculate number of full pages and size of the last page
@@ -359,13 +366,27 @@ void checkFlags(){
 		}
 }
 
+/*
+ * ____ W funkcji trzeba poprawic korzystanie z globalnej zmiennej ____ line ____
+ */
 void fflush_sc_buff(){
+
+
 
 	if(sf_buf_pos>0){
 		sf_buf[sf_buf_pos] = '\0';
 		int i=0;
 		while(sf_buf[i]!='\0'){
-			if(sf_buf[i]=='\r') printf("\n");
+			if(sf_buf[i]!='\r'){
+				strncat(line, (char *)&sf_buf[i], 1);
+			}
+
+			if(sf_buf[i]=='\r') {
+				printf("\n");
+				prsCmd(line);
+				clrTxtBuff(line, MAXTXTLEN);
+			}
+
 			printf("%c", sf_buf[i]);
 			i++;
 			fflush(stdout);
@@ -374,7 +395,97 @@ void fflush_sc_buff(){
 	}
 }
 
+void clrTxtBuff(char* str, int size){
+	for(int i=0; i<size; i++){
+		str[i] = '\0';
+	}
+}
 
+void prsCmd(char* cmd){
+	char inst[10];
+	int offset=0;
+
+	sscanf(cmd, "%s %n", inst, &offset);
+
+	if( strcmp(inst, "setdate" ) == 0){
+		int d,m,y;
+		sscanf(cmd+offset, "%d/%d/%d", &d, &m, &y);
+		setDate(d,m,y);
+
+	}
+	else if( strcmp(inst, "settime" ) == 0){
+		int h,m;
+		sscanf(cmd+offset, "%d:%d", &h, &m);
+		setTime(h, m);
+	}
+
+	else if( strcmp(inst, "printtime" ) == 0){
+			printTime();
+	}
+
+	else if( strcmp(inst, "printdate" ) == 0){
+				printDate();
+		}
+
+	else if( strcmp(inst, "man" ) == 0){
+				printMan();
+		}
+
+}
+
+
+void printMan(){
+	printf("\r\n ***** CONSOLE MANUAL ****** \r\n\n");
+	printf("setdate dd/mm/yy\r\n");
+	printf("settime hh:mm\r\n");
+	printf("printtime\r\n");
+	printf("printdate\r\n");
+	printf("\r\n ***************************\r\n\n");
+}
+
+void setDate(int dd, int mm, int yy){
+
+	RTC_DateTypeDef tmp = {0};
+
+	tmp.Date = (uint8_t) dd;
+	tmp.Month = (uint8_t) mm;
+	tmp.Year = (uint8_t)yy;
+
+	HAL_RTC_SetDate(&hrtc, &tmp, RTC_FORMAT_BIN);
+}
+
+void setTime(int hh, int mm){
+	RTC_TimeTypeDef tmp = {0};
+
+	tmp.Hours = hh;
+	tmp.Minutes = mm;
+
+	HAL_RTC_SetTime(&hrtc, &tmp, RTC_FORMAT_BIN);
+
+}
+
+
+
+void printDate(){
+	RTC_TimeTypeDef mTime;
+	RTC_DateTypeDef mDate;
+
+	HAL_RTC_GetTime(&hrtc, &mTime, RTC_FORMAT_BIN);
+  	HAL_RTC_GetDate(&hrtc, &mDate, RTC_FORMAT_BIN);
+
+  	printf("Date: %d/%d/%d\r\n", mDate.Date, mDate.Month, mDate.Year);
+
+}
+
+void printTime(){
+	RTC_TimeTypeDef mTime;
+	RTC_DateTypeDef mDate;
+
+	HAL_RTC_GetTime(&hrtc, &mTime, RTC_FORMAT_BIN);
+  	HAL_RTC_GetDate(&hrtc, &mDate, RTC_FORMAT_BIN);
+
+  	printf("Time: %d:%d\r\n", mTime.Hours, mTime.Minutes);
+}
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 		sf_buf[sf_buf_pos] = rx_buf[0];
