@@ -57,6 +57,7 @@
 #define	EEPROM_END_OF_PAGE			'\0'
 #define RX_BUF_SIZE		1
 #define SF_BUF_SIZE		100
+#define MEM_POINTER		0x7F
 
 /* USER CODE END PD */
 
@@ -93,6 +94,13 @@ void prsCmd(char* cmd);
 void printDate();
 void printTime();
 void printMan();
+void save_entry_to_eeprom(uint8_t* entry, int size);
+void get_entry(uint8_t *entry);
+void saveEntry();
+void printMem();
+void eraseHis();
+void memr(uint8_t addr);
+void read_eeprom_memcell(uint8_t addr, uint8_t *memcont);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -150,24 +158,6 @@ int main(void)
   HAL_UART_Receive_DMA(&huart1, rx_buf, 1);
 
   lcd_fill_box(0, 0, LCD_WIDTH, LCD_HEIGHT, BLACK);
-
-  uint8_t tmp_mes[HISTORY_NUMS*HISTORY_ROW_SIZE] =
-  	  	  	  	  	  { 101,102,103, 104, 105, 106, 107,
-  	  	  	  	  	    108,109,110, 111, 112, 113, 114,
-						115,116,117, 118, 119, 120, 121,
-						122,123,124, 125, 126, 127, 128,
-						129,130,131, 132, 133, 134, 135
-  	  	  	  	  	   };
-
-  uint8_t tmp_mes2[HISTORY_NUMS*HISTORY_ROW_SIZE];
-
-setDate(9, 7, 22);
-setTime(14, 20);
-
-  printf("STOP\r\n");
-  save_history_to_eeprom(tmp_mes);
-  load_history_from_eeprom(tmp_mes2);
-  printHistory(tmp_mes2);
 
   /* USER CODE END 2 */
 
@@ -304,8 +294,19 @@ void history_mode_prog(){
     //printf("History mode prog\r\n");
 }
 
-void load_history_from_eeprom(uint8_t msrm_history[HISTORY_NUMS*EEPROM_PAGE_SIZE]){
+void load_history_from_eeprom(uint8_t msrm_history[HISTORY_NUMS*HISTORY_ROW_SIZE]){
 	if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, MEM_MSRM_START, I2C_MEMADD_SIZE_8BIT, msrm_history, HISTORY_NUMS*HISTORY_ROW_SIZE, HAL_MAX_DELAY) != HAL_OK)
+							 Error_Handler();
+	while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
+
+	printf("\r\n");
+	for(int i=0; i<35; i++) printf("i:%d -> %d ", i, msrm_history[i]);
+	printf("\n\r");
+	fflush(stdout);
+}
+
+void read_eeprom_memcell(uint8_t addr, uint8_t *memcont){
+	if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, addr, I2C_MEMADD_SIZE_8BIT, memcont, sizeof(*memcont), HAL_MAX_DELAY) != HAL_OK)
 							 Error_Handler();
 	while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
 }
@@ -345,13 +346,76 @@ void save_history_to_eeprom(uint8_t msrm[HISTORY_NUMS*HISTORY_ROW_SIZE]){
 		while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
 	}
 
+	uint8_t mem_ptr = 0x0;
+
+	// set mem pointer
+	HAL_I2C_Mem_Write(&hi2c1, 0xa0, 0x7F, I2C_MEMADD_SIZE_8BIT, &mem_ptr, 1, HAL_MAX_DELAY);
+
+}
+
+/** \brief Zapisuje podana ilosc byte'ow informacji do pamieci historii
+ *
+ *  Zapisuje w kolejnym dostepnym miejscu dane. Miejsce wskazywane jest w pamieci EEPROM w
+ *  miejscu MEM_POINTER. Po zapisie do pamieci aktualizuje wskaznik pamieci MEM_POINTER
+ *
+ *  \param entry dane (domyslnie uzywany do zapisu linii informacji data+czas+odczyt temp)
+ *  \param size	rozmiar danych w byte'ach
+ */
+void save_entry_to_eeprom(uint8_t* entry, int size){
+
+	uint8_t mem_ptr;
+
+	// get mem pointer
+	if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, MEM_POINTER, I2C_MEMADD_SIZE_8BIT, &mem_ptr, 1, HAL_MAX_DELAY) != HAL_OK)
+							 Error_Handler();
+	while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
+
+	// write to mem
+	for(int i=0; i<size; i++){
+		uint8_t tmp[2] = {mem_ptr, *(entry+i)};
+		HAL_I2C_Master_Transmit(&hi2c1, 0xa0, tmp, sizeof tmp, HAL_MAX_DELAY);
+		while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
+		mem_ptr++;
+	}
+
+	// set mem pointer (zeruj jesli wystapilo przekroczenie zakresu historii: 5 pomiarow)
+	if(mem_ptr > (MEM_MSRM_START+HISTORY_ROW_SIZE*HISTORY_NUMS)-1){
+		mem_ptr = 0;
+	}
+
+	// write mem pointer to mem
+	HAL_I2C_Mem_Write(&hi2c1, 0xa0, 0x7F, I2C_MEMADD_SIZE_8BIT, &mem_ptr, 1, HAL_MAX_DELAY);
+
+
+}
+
+void get_entry(uint8_t *entry){
+
+	RTC_TimeTypeDef mTime;
+	RTC_DateTypeDef mDate;
+
+	HAL_RTC_GetTime(&hrtc, &mTime, RTC_FORMAT_BIN);
+  	HAL_RTC_GetDate(&hrtc, &mDate, RTC_FORMAT_BIN);
+
+  	float temp = lps_read_temperature(U_CELSIUS);
+
+  	uint8_t int_part = (uint8_t) temp;
+  	uint8_t dec_part = (uint8_t)((temp-int_part)*100);
+
+  	*entry = mDate.Date;
+  	*(entry+1) = mDate.Month;
+  	*(entry+2) = mDate.Year;
+	*(entry+3) = mTime.Hours;
+	*(entry+4) = mTime.Minutes;
+	*(entry+5) = int_part;
+	*(entry+6) = dec_part;
 }
 
 
 void printHistory(uint8_t msrm_history[HISTORY_NUMS*EEPROM_PAGE_SIZE]){
 	for(int i=0; i<HISTORY_NUMS; i++){
 		for(int j=0; j<HISTORY_ROW_SIZE; j++){
-			printf("%d ", msrm_history[i+j]);
+			printf("%d ", msrm_history[i*HISTORY_ROW_SIZE+j]);
 		}
 		printf("\r\n");
 	}
@@ -420,18 +484,59 @@ void prsCmd(char* cmd){
 	}
 
 	else if( strcmp(inst, "printtime" ) == 0){
-			printTime();
+		printTime();
 	}
 
 	else if( strcmp(inst, "printdate" ) == 0){
-				printDate();
-		}
+		printDate();
+	}
 
 	else if( strcmp(inst, "man" ) == 0){
-				printMan();
-		}
-
+		printMan();
+	}
+	else if( strcmp(inst, "save" ) == 0){
+		saveEntry();
+	}
+	else if( strcmp(inst, "printmem" ) == 0){
+		printMem();
+	}
+	else if( strcmp(inst, "erasemem" ) == 0){
+		eraseHis();
+	}
+	else if( strcmp(inst, "memr" ) == 0){
+		int addr;
+		sscanf(cmd+offset, "%d", &addr);
+		memr((uint8_t)addr);
+	}
 }
+
+void memr(uint8_t addr){
+	uint8_t cont;
+	read_eeprom_memcell(addr, &cont);
+	printf("%x %d\r\n", addr, cont);
+}
+
+void eraseHis(){
+	uint8_t msrm[HISTORY_NUMS*HISTORY_ROW_SIZE];
+
+	for(int i=0; i<HISTORY_NUMS*HISTORY_ROW_SIZE; i++)
+		msrm[i] = '\0';
+	save_history_to_eeprom(msrm);
+}
+
+void printMem(){
+	uint8_t msrm_history[HISTORY_NUMS*HISTORY_ROW_SIZE];
+
+	load_history_from_eeprom(msrm_history); // tu jest blad
+	printHistory(msrm_history);				// tu jest blad
+}
+
+void saveEntry(){
+	uint8_t entry[HISTORY_ROW_SIZE];
+	get_entry(entry); // czy ja tutaj nie potrzebuje zaalokowac sobie 7 komorek pamieci?
+	save_entry_to_eeprom(entry,HISTORY_ROW_SIZE);
+}
+
 
 
 void printMan(){
@@ -440,6 +545,10 @@ void printMan(){
 	printf("settime hh:mm\r\n");
 	printf("printtime\r\n");
 	printf("printdate\r\n");
+	printf("save\r\n");
+	printf("printmem\r\n");
+	printf("erasemem\r\n");
+	printf("memr\r\n");
 	printf("\r\n ***************************\r\n\n");
 }
 
