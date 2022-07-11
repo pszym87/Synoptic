@@ -72,6 +72,7 @@
 uint8_t rx_buf[RX_BUF_SIZE];
 uint8_t sf_buf[SF_BUF_SIZE];
 uint8_t sf_buf_pos = 0;
+uint8_t alarm_fl = 0;
 
 static char line[MAXTXTLEN];
 /* USER CODE END PV */
@@ -101,6 +102,9 @@ void printMem();
 void eraseHis();
 void memr(uint8_t addr);
 void read_eeprom_memcell(uint8_t addr, uint8_t *memcont);
+void set_alarm_m_s(uint8_t min, uint8_t sec);
+void alarm_settings();
+void do_alarm_action();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -171,6 +175,8 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
 	fflush_sc_buff();
+	alarm_settings();
+
 
 	switch(which_program){
 
@@ -298,11 +304,6 @@ void load_history_from_eeprom(uint8_t msrm_history[HISTORY_NUMS*HISTORY_ROW_SIZE
 	if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, MEM_MSRM_START, I2C_MEMADD_SIZE_8BIT, msrm_history, HISTORY_NUMS*HISTORY_ROW_SIZE, HAL_MAX_DELAY) != HAL_OK)
 							 Error_Handler();
 	while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
-
-	printf("\r\n");
-	for(int i=0; i<35; i++) printf("i:%d -> %d ", i, msrm_history[i]);
-	printf("\n\r");
-	fflush(stdout);
 }
 
 void read_eeprom_memcell(uint8_t addr, uint8_t *memcont){
@@ -508,6 +509,12 @@ void prsCmd(char* cmd){
 		sscanf(cmd+offset, "%d", &addr);
 		memr((uint8_t)addr);
 	}
+	else if( strcmp(inst, "setal" ) == 0){
+		int m,s;
+		sscanf(cmd+offset, "%d:%d", &m, &s);
+		set_alarm_m_s(m, s);
+	}
+
 }
 
 void memr(uint8_t addr){
@@ -549,6 +556,7 @@ void printMan(){
 	printf("printmem\r\n");
 	printf("erasemem\r\n");
 	printf("memr\r\n");
+	printf("setal\r\n");
 	printf("\r\n ***************************\r\n\n");
 }
 
@@ -596,10 +604,49 @@ void printTime(){
   	printf("Time: %d:%d\r\n", mTime.Hours, mTime.Minutes);
 }
 
+void set_alarm_m_s(uint8_t min, uint8_t sec){
+
+	  RTC_AlarmTypeDef alarm;
+
+	  alarm.AlarmTime.Hours = 0x0;
+	  alarm.AlarmTime.Minutes = min;
+	  alarm.AlarmTime.Seconds = sec;
+	  alarm.AlarmTime.SubSeconds = 0x0;
+	  alarm.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+	  alarm.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
+	  alarm.AlarmMask = RTC_ALARMMASK_NONE;
+	  alarm.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
+	  alarm.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
+	  alarm.AlarmDateWeekDay = 0x1;
+	  alarm.Alarm = RTC_ALARM_A;
+
+	  HAL_RTC_SetAlarm_IT(&hrtc, &alarm, RTC_FORMAT_BIN);
+}
+
+void alarm_settings(){
+
+	if(alarm_fl == 1){
+		alarm_fl++;
+		do_alarm_action();
+		alarm_fl = 0;
+	}
+
+}
+
+void do_alarm_action(){
+	saveEntry();
+}
+
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 		sf_buf[sf_buf_pos] = rx_buf[0];
 		++sf_buf_pos;
 		HAL_UART_Receive_DMA(&huart1, rx_buf, 1);
+}
+
+void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc){
+	printf("Alarm!\r\n");
+	alarm_fl++;
 }
 
 /* USER CODE END 4 */
