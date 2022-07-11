@@ -74,6 +74,20 @@ uint8_t sf_buf[SF_BUF_SIZE];
 uint8_t sf_buf_pos = 0;
 uint8_t alarm_fl = 0;
 
+typedef enum prog_mode {live_mode, history_mode} prog_mode_t;
+
+typedef struct hmdata{
+	bool history_loaded;
+	uint8_t *msrm_history;
+
+} hmdata_t;
+
+typedef struct prgsdata{
+	prog_mode_t which_program;
+	hmdata_t *hmdt;
+
+} prgsdata_t;
+
 static char line[MAXTXTLEN];
 /* USER CODE END PV */
 
@@ -82,16 +96,16 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 void checkFlags();
 void live_mode_prog();
-void history_mode_prog();
+void history_mode_prog(hmdata_t *hmdt);
 void load_history_from_eeprom(uint8_t[]);
 void printHistory(uint8_t[]);
 void write_all_history_to_eeprom(uint8_t[]);
 void save_history_to_eeprom(uint8_t msrm[HISTORY_NUMS*HISTORY_ROW_SIZE]);
-void fflush_sc_buff();
+void fflush_sc_buff(prgsdata_t *prgs);
 void setDate(int dd, int mm, int yy);
 void setTime(int hh, int mm);
 void clrTxtBuff(char* str, int size);
-void prsCmd(char* cmd);
+void prsCmd(prgsdata_t *prgs, char* cmd);
 void printDate();
 void printTime();
 void printMan();
@@ -105,6 +119,9 @@ void read_eeprom_memcell(uint8_t addr, uint8_t *memcont);
 void set_alarm_m_s(uint8_t min, uint8_t sec);
 void alarm_settings();
 void do_alarm_action();
+void refhis(uint8_t* msrm_history);
+void chprog(prog_mode_t *which_prog);
+void paintScreenBlack();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -119,8 +136,7 @@ void do_alarm_action();
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  typedef enum prog_mode {live_mode, history_mode} prog_mode_t;
-  prog_mode_t which_program = 1;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -161,12 +177,17 @@ int main(void)
 
   HAL_UART_Receive_DMA(&huart1, rx_buf, 1);
 
-  lcd_fill_box(0, 0, LCD_WIDTH, LCD_HEIGHT, BLACK);
+  paintScreenBlack();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+
+  uint8_t history[HISTORY_NUMS*HISTORY_ROW_SIZE];
+  hmdata_t hmdt = {false, history};
+  prgsdata_t prgs = {live_mode, &hmdt};
 
   while (1)
   {
@@ -174,17 +195,17 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	fflush_sc_buff();
+	fflush_sc_buff(&prgs);
 	alarm_settings();
 
 
-	switch(which_program){
+	switch(prgs.which_program){
 
 		case live_mode:
 			live_mode_prog();
 			break;
 		case history_mode:
-			history_mode_prog();
+			history_mode_prog(&hmdt);
 			break;
 
 	}
@@ -267,30 +288,23 @@ void live_mode_prog(){
 	lcd_draw_image_fast(2,34,24,24,press_icon);
 	lcd_draw_image_fast(2,63,24,24,alt_icon);
 
-
-
-	printf("Live mode prog\r\n");
 }
-void history_mode_prog(){
+void history_mode_prog(hmdata_t *hmdt){
 
-	static bool historyLoaded;
-	static uint8_t msrm_history[HISTORY_NUMS*HISTORY_ROW_SIZE];
+	if(!hmdt->history_loaded){
+		load_history_from_eeprom(hmdt->msrm_history);
 
-	if(!historyLoaded){
-		load_history_from_eeprom(msrm_history);
+		printHistory(hmdt->msrm_history);
+		hmdt->history_loaded = true;
 
-		printHistory(msrm_history);
-		historyLoaded = true;
-
-	} else if(historyLoaded){
+	} else if(hmdt->history_loaded){
 
 		for(int i=0; i<HISTORY_NUMS; i++){
 
 			int c = HISTORY_ROW_SIZE * i;
 			wchar_t text[MAXTXTLEN];
-			swprintf(text, MAXTXTLEN, L"%d/%d/%d: %d,%d C", msrm_history[c],msrm_history[c+1], msrm_history[c+2], msrm_history[c+3],
-																			 msrm_history[c+4], msrm_history[c+5], msrm_history[c+5],
-																			 msrm_history[c+6]);
+			swprintf(text, MAXTXTLEN, L"%02d/%02d/%02d %02d:%02d %02d.%02d C", hmdt->msrm_history[c],hmdt->msrm_history[c+1], hmdt->msrm_history[c+2], hmdt->msrm_history[c+3],
+																				  hmdt->msrm_history[c+4], hmdt->msrm_history[c+5], hmdt->msrm_history[c+6]);
 			hagl_put_text(text, 5, i*20, RED, font6x9);
 		}
 
@@ -299,6 +313,12 @@ void history_mode_prog(){
 	}
     //printf("History mode prog\r\n");
 }
+
+void refhis(uint8_t* msrm_history){
+	load_history_from_eeprom(msrm_history);
+}
+
+
 
 void load_history_from_eeprom(uint8_t msrm_history[HISTORY_NUMS*HISTORY_ROW_SIZE]){
 	if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, MEM_MSRM_START, I2C_MEMADD_SIZE_8BIT, msrm_history, HISTORY_NUMS*HISTORY_ROW_SIZE, HAL_MAX_DELAY) != HAL_OK)
@@ -434,8 +454,7 @@ void checkFlags(){
 /*
  * ____ W funkcji trzeba poprawic korzystanie z globalnej zmiennej ____ line ____
  */
-void fflush_sc_buff(){
-
+void fflush_sc_buff(prgsdata_t *prgs){
 
 
 	if(sf_buf_pos>0){
@@ -448,7 +467,7 @@ void fflush_sc_buff(){
 
 			if(sf_buf[i]=='\r') {
 				printf("\n");
-				prsCmd(line);
+				prsCmd(prgs, line);
 				clrTxtBuff(line, MAXTXTLEN);
 			}
 
@@ -466,7 +485,7 @@ void clrTxtBuff(char* str, int size){
 	}
 }
 
-void prsCmd(char* cmd){
+void prsCmd(prgsdata_t *prgs, char* cmd){
 	char inst[10];
 	int offset=0;
 
@@ -514,7 +533,12 @@ void prsCmd(char* cmd){
 		sscanf(cmd+offset, "%d:%d", &m, &s);
 		set_alarm_m_s(m, s);
 	}
-
+	else if( strcmp(inst, "refhis" ) == 0){
+		refhis(prgs->hmdt->msrm_history);
+	}
+	else if( strcmp(inst, "chprog" ) == 0){
+		chprog(&prgs->which_program);
+	}
 }
 
 void memr(uint8_t addr){
@@ -544,6 +568,15 @@ void saveEntry(){
 	save_entry_to_eeprom(entry,HISTORY_ROW_SIZE);
 }
 
+void chprog(prog_mode_t *which_prog){
+	if(*which_prog == live_mode) *which_prog = history_mode;
+	else if(*which_prog == history_mode) *which_prog = live_mode;
+	paintScreenBlack();
+}
+
+void paintScreenBlack(){
+	lcd_fill_box(0, 0, LCD_WIDTH, LCD_HEIGHT, BLACK);
+}
 
 
 void printMan(){
@@ -557,6 +590,8 @@ void printMan(){
 	printf("erasemem\r\n");
 	printf("memr\r\n");
 	printf("setal\r\n");
+	printf("refhis\r\n");
+	printf("chprog\r\n");
 	printf("\r\n ***************************\r\n\n");
 }
 
@@ -636,7 +671,6 @@ void alarm_settings(){
 void do_alarm_action(){
 	saveEntry();
 }
-
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 		sf_buf[sf_buf_pos] = rx_buf[0];
