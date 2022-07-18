@@ -64,4 +64,6 @@ Jeden rekord to 7B informacji, w którym po 1B przeznaczono kolejno na: dzień, 
 Pamięć umożliwia przechowywanie 5 rekordów. Jeśli wystąpi żądanie zapisu kolejnych rekordów, to poprzednie rekordy zostaną nadpisane wg reguły cyklicznej tj. po zapisaniu 0x22 wskaźnik zostanie przesunięty na początek pamięci w miejsce 0x00.
 
 System wie gdzie zapisywać kolejny rekord przez wskaźnik pamięci, który umieszczono w komórce 0x7f. Znajduje się w niej adres kolejnej komórki do zapisu pierwszego byte’a rekordu.
+![IMG_0042](https://user-images.githubusercontent.com/106841261/179476986-7a420d2d-3704-40a7-828b-27d68e177792.jpg)
+
 
