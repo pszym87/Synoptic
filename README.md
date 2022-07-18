@@ -1,3 +1,4 @@
+## Podsumowanie
 Synoptic to projekt systemu wbudowanego z użyciem mikrokontrolera **STM32** NUCLEO64-F476RG, który komunikuje się z peryferiami: wyświetlaczem TFT (ST7735S), pamięcią EEPROM 24LC01, konwerterem UART-USB PL2303 i czujnikiem ciśnienia atmosferycznego LPS25HB.
 
 Projekt obejmuje: fizyczne połączenie komponentów na płytce stykowej, **oprogramowanie w C niskopoziomowych bibliotek** dla urządzeń LPS26HB, 24LC01, ST7735S, oprogramowanie w C funkcjonalności wysokopoziomowej: 
@@ -12,7 +13,7 @@ Mikrokontroler komunikuje się z urządzeniami za pomocą protokołów **I2C** 
 **Schemat połączeń**
 ![schemat](https://user-images.githubusercontent.com/106841261/179467229-f1d3b543-00c1-4221-a203-384294190a52.png)
 
-**Funkcjonalność wysokopoziomowa**
+## Funkcjonalność wysokopoziomowa
 
 Podprogram 1: ‘Live mode’
 
@@ -53,7 +54,7 @@ Funkcjonalność debuggingu sprowadza się do:
 | chprog | Przełącza pomiędzy programami: live mode i history mode |  |
 | man | Drukuje na konsoli wszystkie instrukcje dostępne dla urządzenia |  |
 
-**Zarządzanie pamięcią**
+## Zarządzanie pamięcią
 <img width="494" alt="memory" src="https://user-images.githubusercontent.com/106841261/179468684-8faf6774-02f8-4b0f-a1a5-7d7348af77af.png">
 
 Pamięć 24LC01 umożliwia zapis 128B informacji. Na zapis pomiarów, określanych wcześniej jako historia przeznaczono 35B począwszy od adresu 0x00.
