@@ -66,4 +66,6 @@ Pamięć umożliwia przechowywanie 5 rekordów. Jeśli wystąpi żądanie zapisu
 System wie gdzie zapisywać kolejny rekord przez wskaźnik pamięci, który umieszczono w komórce 0x7f. Znajduje się w niej adres kolejnej komórki do zapisu pierwszego byte’a rekordu.
 ![IMG_0042](https://user-images.githubusercontent.com/106841261/179476986-7a420d2d-3704-40a7-828b-27d68e177792.jpg)
 
+## Doxygen
+Dokumentacja doxygen pod linkiem https://pszym87.github.io/Synoptic/index.html
 
