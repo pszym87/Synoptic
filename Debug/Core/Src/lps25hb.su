@@ -1,8 +1,0 @@
-../Core/Src/lps25hb.c:65:26:lps_write_to_reg	32	static
-../Core/Src/lps25hb.c:82:26:lps_read_from_reg	32	static
-../Core/Src/lps25hb.c:91:6:lps_init	8	static
-../Core/Src/lps25hb.c:103:7:lps_read_temperature	32	static
-../Core/Src/lps25hb.c:117:6:lps_pressure_correction	16	static
-../Core/Src/lps25hb.c:123:7:lps_read_absolute_pressure	16	static
-../Core/Src/lps25hb.c:135:7:lps_read_relative_pressure	40	static
-../Core/Src/lps25hb.c:143:7:lps_get_altitude_hyps_f	32	static
