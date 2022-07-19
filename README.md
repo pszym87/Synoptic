@@ -1,6 +1,5 @@
-<img width="24" alt="reddot" src="https://user-images.githubusercontent.com/106841261/179733608-3cfa465a-56a0-462d-9d7d-02db08906bdd.jpg"> **Uwaga kod napisany przeze mnie znajduje się w Core/Inc/ i Core/Src/** <img width="24" alt="reddot" src="https://user-images.githubusercontent.com/106841261/179733608-3cfa465a-56a0-462d-9d7d-02db08906bdd.jpg">
-
-Pozostałe pliki to wygenerowane są przez STM32CubeMX
+<img width="24" alt="reddot" src="https://user-images.githubusercontent.com/106841261/179733608-3cfa465a-56a0-462d-9d7d-02db08906bdd.jpg"> **Uwaga kod napisany przeze mnie znajduje się w Core/Inc/ i Core/Src/** <img width="24" alt="reddot" src="https://user-images.githubusercontent.com/106841261/179733608-3cfa465a-56a0-462d-9d7d-02db08906bdd.jpg"> (są to pliki: 24aa01.c, main.c, lps25hb.c, lcd.c + pliki nagłówkowe)
+Pozostałe pliki wygenerowane są przez STM32CubeMX IDE
 
 ## Wprowadzenie
 Synoptic to projekt systemu wbudowanego z użyciem mikrokontrolera **STM32** NUCLEO64-F476RG, który komunikuje się z peryferiami: wyświetlaczem TFT (ST7735S), pamięcią EEPROM 24LC01, konwerterem UART-USB PL2303 i czujnikiem ciśnienia atmosferycznego LPS25HB.
