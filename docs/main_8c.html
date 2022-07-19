@@ -77,16 +77,16 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
-<p>Czy to dziala.  
+<p>Glowna petla programu wraz ze sterowaniem Author: pszymanski.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="main_8h_source.html">main.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="dma_8h_source.html">dma.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="i2c_8h_source.html">i2c.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="iwdg_8h_source.html">iwdg.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="rtc_8h_source.html">rtc.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="spi_8h_source.html">spi.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="usart_8h_source.html">usart.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="gpio_8h_source.html">gpio.h</a>&quot;</code><br />
+<code>#include &quot;dma.h&quot;</code><br />
+<code>#include &quot;i2c.h&quot;</code><br />
+<code>#include &quot;iwdg.h&quot;</code><br />
+<code>#include &quot;rtc.h&quot;</code><br />
+<code>#include &quot;spi.h&quot;</code><br />
+<code>#include &quot;usart.h&quot;</code><br />
+<code>#include &quot;gpio.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="lcd_8h_source.html">lcd.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="lps25hb_8h_source.html">lps25hb.h</a>&quot;</code><br />
 <code>#include &lt;stdio.h&gt;</code><br />
@@ -98,13 +98,15 @@ $(function() {
 <code>#include &lt;math.h&gt;</code><br />
 <code>#include &lt;stdbool.h&gt;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
-<code>#include &quot;24aa01.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="24aa01_8h_source.html">24aa01.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structhmdata.html">hmdata</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Zbior zmiennych na potrzeby podprogramu 'live mode'.  <a href="structhmdata.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structprgsdata.html">prgsdata</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Zbior zmiennych, z ktorych korzystaja wszystkie podprogramy i programy dzialajace w tle.  <a href="structprgsdata.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
@@ -126,9 +128,11 @@ typedef enum prog_mode&#160;</td><td class="memItemRight" valign="bottom"><b>pro
 <tr class="separator:ab5e04d87a5762b25032d8d91e6304802"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99e3b828ede8dd7986f56895b4357cfb"><td class="memItemLeft" align="right" valign="top"><a id="a99e3b828ede8dd7986f56895b4357cfb" name="a99e3b828ede8dd7986f56895b4357cfb"></a>
 typedef struct <a class="el" href="structhmdata.html">hmdata</a>&#160;</td><td class="memItemRight" valign="bottom"><b>hmdata_t</b></td></tr>
+<tr class="memdesc:a99e3b828ede8dd7986f56895b4357cfb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Zbior zmiennych na potrzeby podprogramu 'live mode'. <br /></td></tr>
 <tr class="separator:a99e3b828ede8dd7986f56895b4357cfb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67601dfd298750ff70690f2bd0a28699"><td class="memItemLeft" align="right" valign="top"><a id="a67601dfd298750ff70690f2bd0a28699" name="a67601dfd298750ff70690f2bd0a28699"></a>
 typedef struct <a class="el" href="structprgsdata.html">prgsdata</a>&#160;</td><td class="memItemRight" valign="bottom"><b>prgsdata_t</b></td></tr>
+<tr class="memdesc:a67601dfd298750ff70690f2bd0a28699"><td class="mdescLeft">&#160;</td><td class="mdescRight">Zbior zmiennych, z ktorych korzystaja wszystkie podprogramy i programy dzialajace w tle. <br /></td></tr>
 <tr class="separator:a67601dfd298750ff70690f2bd0a28699"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
@@ -150,7 +154,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>chck_wchdog_fl</b> ()
 void&#160;</td><td class="memItemRight" valign="bottom"><b>live_mode_prog</b> ()</td></tr>
 <tr class="separator:a15dc3f991d87a98c0dc2b44657a5de63"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a892bad4c508f9d53634f9ea63130de7e"><td class="memItemLeft" align="right" valign="top"><a id="a892bad4c508f9d53634f9ea63130de7e" name="a892bad4c508f9d53634f9ea63130de7e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>history_mode_prog</b> (<a class="el" href="structhmdata.html">hmdata_t</a> *hmdt)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>history_mode_prog</b> (<a class="el" href="main_8c.html#a99e3b828ede8dd7986f56895b4357cfb">hmdata_t</a> *hmdt)</td></tr>
 <tr class="separator:a892bad4c508f9d53634f9ea63130de7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58977ced34ff1212a16f6f7e663f77bf"><td class="memItemLeft" align="right" valign="top"><a id="a58977ced34ff1212a16f6f7e663f77bf" name="a58977ced34ff1212a16f6f7e663f77bf"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>print_history</b> (uint8_t[])</td></tr>
@@ -159,7 +163,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_history</b> (ui
 void&#160;</td><td class="memItemRight" valign="bottom"><b>write_all_history_to_eeprom</b> (uint8_t[])</td></tr>
 <tr class="separator:a7f08c97c037eb0da1a8af2b149c545e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade160ae0e97242cf12ac853095667777"><td class="memItemLeft" align="right" valign="top"><a id="ade160ae0e97242cf12ac853095667777" name="ade160ae0e97242cf12ac853095667777"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>fflush_sc_buff</b> (<a class="el" href="structprgsdata.html">prgsdata_t</a> *prgs)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>fflush_sc_buff</b> (<a class="el" href="main_8c.html#a67601dfd298750ff70690f2bd0a28699">prgsdata_t</a> *prgs)</td></tr>
 <tr class="separator:ade160ae0e97242cf12ac853095667777"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae54581e1cd8c64fc08c90297b0f15538"><td class="memItemLeft" align="right" valign="top"><a id="ae54581e1cd8c64fc08c90297b0f15538" name="ae54581e1cd8c64fc08c90297b0f15538"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>set_date</b> (int dd, int mm, int yy)</td></tr>
@@ -171,7 +175,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>set_time</b> (int hh,
 void&#160;</td><td class="memItemRight" valign="bottom"><b>clrtxtbuff</b> (char *str, int size)</td></tr>
 <tr class="separator:a9e5dddb75c44a0d41862d6e75629a792"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a48d7f8dee02c5917e04fd8f9279006e6"><td class="memItemLeft" align="right" valign="top"><a id="a48d7f8dee02c5917e04fd8f9279006e6" name="a48d7f8dee02c5917e04fd8f9279006e6"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>prscmd</b> (<a class="el" href="structprgsdata.html">prgsdata_t</a> *prgs, char *cmd)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>prscmd</b> (<a class="el" href="main_8c.html#a67601dfd298750ff70690f2bd0a28699">prgsdata_t</a> *prgs, char *cmd)</td></tr>
 <tr class="separator:a48d7f8dee02c5917e04fd8f9279006e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3f71d6d5a11522c631eb7105997e4435"><td class="memItemLeft" align="right" valign="top"><a id="a3f71d6d5a11522c631eb7105997e4435" name="a3f71d6d5a11522c631eb7105997e4435"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>print_date</b> ()</td></tr>
@@ -220,7 +224,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>chprog</b> (prog_mode
 <tr class="memdesc:a840291bc02cba5474a4cb46a9b9566fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">The application entry point.  <a href="main_8c.html#a840291bc02cba5474a4cb46a9b9566fe">More...</a><br /></td></tr>
 <tr class="separator:a840291bc02cba5474a4cb46a9b9566fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0a4f58de8765844c6ba47df301e490e5"><td class="memItemLeft" align="right" valign="top"><a id="a0a4f58de8765844c6ba47df301e490e5" name="a0a4f58de8765844c6ba47df301e490e5"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>print_history</b> (uint8_t msrm_history[HISTORY_NUMS *EEPROM_PAGE_SIZE])</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>print_history</b> (uint8_t msrm_history[<a class="el" href="24aa01_8h.html#a19b62d6df06253764289a66e786a6f7e">HISTORY_NUMS</a> *EEPROM_PAGE_SIZE])</td></tr>
 <tr class="separator:a0a4f58de8765844c6ba47df301e490e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae494a9643f29b87d6d81e5264e60e57b"><td class="memItemLeft" align="right" valign="top"><a id="ae494a9643f29b87d6d81e5264e60e57b" name="ae494a9643f29b87d6d81e5264e60e57b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>HAL_UART_RxCpltCallback</b> (UART_HandleTypeDef *huart)</td></tr>
@@ -248,7 +252,7 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>alarm_fl</b> = 0</
 <tr class="separator:a52ca5b35fe928dadaa9bb0d8d0e61db3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p >Czy to dziala. </p>
+<div class="textblock"><p >Glowna petla programu wraz ze sterowaniem Author: pszymanski. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a id="a1730ffe1e560465665eb47d9264826f9" name="a1730ffe1e560465665eb47d9264826f9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1730ffe1e560465665eb47d9264826f9">&#9670;&nbsp;</a></span>Error_Handler()</h2>

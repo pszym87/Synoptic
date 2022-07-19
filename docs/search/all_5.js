@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['error_5fhandler_0',['Error_Handler',['../main_8c.html#a1730ffe1e560465665eb47d9264826f9',1,'Error_Handler(void):&#160;main.c'],['../main_8h.html#a1730ffe1e560465665eb47d9264826f9',1,'Error_Handler(void):&#160;main.c']]],
-  ['external_5fsai1_5fclock_5fvalue_1',['EXTERNAL_SAI1_CLOCK_VALUE',['../stm32l4xx__hal__conf_8h.html#a3e840e13854bdb68608b69a2ecf996ab',1,'stm32l4xx_hal_conf.h']]],
-  ['external_5fsai2_5fclock_5fvalue_2',['EXTERNAL_SAI2_CLOCK_VALUE',['../stm32l4xx__hal__conf_8h.html#a8f8fce2496d8c61b71331907e08c24c7',1,'stm32l4xx_hal_conf.h']]]
+  ['history_5fnums_0',['HISTORY_NUMS',['../24aa01_8h.html#a19b62d6df06253764289a66e786a6f7e',1,'24aa01.h']]],
+  ['history_5frow_5fsize_1',['HISTORY_ROW_SIZE',['../24aa01_8h.html#a3e9b6a362ec80248a4dd99c6208048c5',1,'24aa01.h']]],
+  ['hmdata_2',['hmdata',['../structhmdata.html',1,'']]],
+  ['hmdata_5ft_3',['hmdata_t',['../main_8c.html#a99e3b828ede8dd7986f56895b4357cfb',1,'main.c']]]
 ];

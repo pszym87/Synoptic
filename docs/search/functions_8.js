@@ -1,9 +1,7 @@
 var searchData=
 [
-  ['main_0',['main',['../main_8c.html#a840291bc02cba5474a4cb46a9b9566fe',1,'main.c']]],
-  ['memmanage_5fhandler_1',['MemManage_Handler',['../stm32l4xx__it_8c.html#a3150f74512510287a942624aa9b44cc5',1,'MemManage_Handler(void):&#160;stm32l4xx_it.c'],['../stm32l4xx__it_8h.html#a3150f74512510287a942624aa9b44cc5',1,'MemManage_Handler(void):&#160;stm32l4xx_it.c']]],
-  ['mx_5fdma_5finit_2',['MX_DMA_Init',['../dma_8c.html#a323249dac769f9855c10b4ec9446b707',1,'MX_DMA_Init(void):&#160;dma.c'],['../dma_8h.html#a323249dac769f9855c10b4ec9446b707',1,'MX_DMA_Init(void):&#160;dma.c']]],
-  ['mx_5fgpio_5finit_3',['MX_GPIO_Init',['../gpio_8c.html#ac724e431d2af879252de35615be2bdea',1,'MX_GPIO_Init(void):&#160;gpio.c'],['../gpio_8h.html#ac724e431d2af879252de35615be2bdea',1,'MX_GPIO_Init(void):&#160;gpio.c']]],
-  ['mx_5fi2c1_5finit_4',['MX_I2C1_Init',['../i2c_8c.html#ada6e763cfa4108a8d24cd27b75f2f489',1,'MX_I2C1_Init(void):&#160;i2c.c'],['../i2c_8h.html#ada6e763cfa4108a8d24cd27b75f2f489',1,'MX_I2C1_Init(void):&#160;i2c.c']]],
-  ['mx_5frtc_5finit_5',['MX_RTC_Init',['../rtc_8c.html#abf4accd1ce479030808e546f3d4642c9',1,'MX_RTC_Init(void):&#160;rtc.c'],['../rtc_8h.html#abf4accd1ce479030808e546f3d4642c9',1,'MX_RTC_Init(void):&#160;rtc.c']]]
+  ['save_5fentry_5fto_5feeprom_0',['save_entry_to_eeprom',['../24aa01_8c.html#af71a030adff0551352aa0694dcb0cd52',1,'save_entry_to_eeprom(uint8_t *entry, int size):&#160;24aa01.c'],['../24aa01_8h.html#af71a030adff0551352aa0694dcb0cd52',1,'save_entry_to_eeprom(uint8_t *entry, int size):&#160;24aa01.c']]],
+  ['save_5fhistory_5fto_5feeprom_1',['save_history_to_eeprom',['../24aa01_8c.html#a52f145f4f7995143dbda870ed6966b63',1,'save_history_to_eeprom(uint8_t msrm[HISTORY_NUMS *HISTORY_ROW_SIZE]):&#160;24aa01.c'],['../24aa01_8h.html#a52f145f4f7995143dbda870ed6966b63',1,'save_history_to_eeprom(uint8_t msrm[HISTORY_NUMS *HISTORY_ROW_SIZE]):&#160;24aa01.c']]],
+  ['set_5falarm_5fm_5fs_2',['set_alarm_m_s',['../main_8c.html#a0cd1d397114e17d9c6915bc4b5338b83',1,'main.c']]],
+  ['systemclock_5fconfig_3',['SystemClock_Config',['../main_8c.html#a70af21c671abfcc773614a9a4f63d920',1,'main.c']]]
 ];

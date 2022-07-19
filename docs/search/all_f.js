@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['tick_5fint_5fpriority_0',['TICK_INT_PRIORITY',['../stm32l4xx__hal__conf_8h.html#ae27809d4959b9fd5b5d974e3e1c77d2e',1,'stm32l4xx_hal_conf.h']]]
+  ['vdd_5fvalue_0',['VDD_VALUE',['../stm32l4xx__hal__conf_8h.html#aae550dad9f96d52cfce5e539adadbbb4',1,'stm32l4xx_hal_conf.h']]]
 ];

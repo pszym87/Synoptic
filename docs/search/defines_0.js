@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['assert_5fparam_0',['assert_param',['../stm32l4xx__hal__conf_8h.html#a631dea7b230e600555f979c62af1de21',1,'stm32l4xx_hal_conf.h']]]
+  ['history_5fnums_0',['HISTORY_NUMS',['../24aa01_8h.html#a19b62d6df06253764289a66e786a6f7e',1,'24aa01.h']]],
+  ['history_5frow_5fsize_1',['HISTORY_ROW_SIZE',['../24aa01_8h.html#a3e9b6a362ec80248a4dd99c6208048c5',1,'24aa01.h']]]
 ];
