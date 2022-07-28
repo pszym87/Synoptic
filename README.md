@@ -45,6 +45,22 @@ Synoptic is programmable through CLI (Command-Line Interface).
 
 Below are the list of instructions with specified format which allows to control the device:
 
+| Instruction | Description | Example of usage |
+| ----------- | ----------- | ---------------- |
+| `setdate dd/mm/yy` | Sets dd/mm/yy date on the RTC | `setdate 11/12/22` |
+| `settime hh:mm` | Sets hh:mm time on the RTC  (24h time format) | `settime 10:30` |
+| `printtime` | Prints current time from RTC | |
+| `printdate` | Prints current date from RTC | |
+| `save` | Reads the temperature value from the sensor and the time stamp from the RTC, then writes them in the next memory location |
+| `printmem` | Prints memory (EEPROM) content allocated for storing measurements |
+| `erasemem` | Erases memory content allocated for storing the measurements (overwrites it with the value \0) |
+| `memr address` | Prints contents of memory (EEPROM) cell at address address | `memr 32` |
+| `setal hh:mm` | Sets the alarm time to hh:mm | `setal 11:00` |
+| `refhis` | Refreshes copy of EEPROM memory content stored in the MCU RAM memory | |
+| `chprog` | Switches between available subprograms (live mode and history mode) | |
+| `man` | Prints all supported instructions | | 
+
+
 ### Memory management
 
 ![memory](https://user-images.githubusercontent.com/106841261/181515029-b98d9a48-06e9-48ab-839e-06e28e17329d.png)
