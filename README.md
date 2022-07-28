@@ -27,10 +27,15 @@ Connections between hardware modules are presented in the picture below:
 ## Higher Level Functionality
 
 __Subprogram 1: ‘Live mode’__
+
 Program reads current temperature and atmospheric pressure, then calculates an altitude. Data are shown on LCD display with basic graphics.
+
 __Subprogram 2: ‘History mode’__
-Program reads measurement history stored in EEPROM and presents it on the display. 
+
+Program reads measurement history stored in EEPROM and presents it on the display.
+
 __Continuous program__
+
 Independently from selected mode system can:
 - trigger an alarm in interruption mode. Which writes current measurement and timestamp to EEPROM
 - handle console input/output (printing and reading to the console is realized in the interruption & DMA mode)
