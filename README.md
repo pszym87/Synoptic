@@ -1,6 +1,6 @@
 # Introduction
 
-Synoptic is an _embedded_ project programmed in the **C language**. The project hardware consists of NUCLEO64-F476RG board, EEPROM 24LC01 memory, TFT 1.8 inch LCD screen SP35S, UART-USB PL2303 converter and barometric sensor LPS25HB.
+Synoptic is an _embedded_ project programmed in the **C language**. The project hardware consists of NUCLEO64-F476RG board, EEPROM 24LC01 memory, TFT 1.8 inch LCD screen ST7735S, UART-USB PL2303 converter and barometric sensor LPS25HB.
 
 There are several parts to this project, including: wiring hardware components to the breadboard, developing low level libraries for peripheral devices, coding higher level functionalities. 
 
