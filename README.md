@@ -1,3 +1,6 @@
+<img width="24" alt="reddot" src="https://user-images.githubusercontent.com/106841261/179733608-3cfa465a-56a0-462d-9d7d-02db08906bdd.jpg">**The code that I have authored is placed in the following directories: Core/Inc and Core/Src**<img width="24" alt="reddot" src="https://user-images.githubusercontent.com/106841261/179733608-3cfa465a-56a0-462d-9d7d-02db08906bdd.jpg"> (files: 24aa01.c, main.c, lps25hb.c, lcd.c and corresponding header files).
+The remaining files were produced by STM32CubdeIDE.
+
 # Introduction
 
 Synoptic is an _embedded_ project programmed in the **C language**. The project hardware consists of NUCLEO64-F476RG board, EEPROM 24LC01 memory, TFT 1.8 inch LCD screen ST7735S, UART-USB PL2303 converter and barometric sensor LPS25HB.
