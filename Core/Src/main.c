@@ -1,20 +1,10 @@
-/* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2022 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ * \file main.c
+ *
+ * \brief Glowna petla programu wraz ze sterowaniem
+ *      Author: pszymanski
+ */
+
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -39,6 +29,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <string.h>
+#include "24aa01.h"
 
 /* USER CODE END Includes */
 
@@ -50,14 +41,11 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define MAXTXTLEN			100
-#define HISTORY_NUMS 		5
-#define HISTORY_ROW_SIZE 	7
-#define MEM_MSRM_START		0x0
-#define EEPROM_PAGE_SIZE	8
-#define	EEPROM_END_OF_PAGE			'\0'
+
+
 #define RX_BUF_SIZE		1
 #define SF_BUF_SIZE		100
-#define MEM_POINTER		0x7F
+
 
 /* USER CODE END PD */
 
@@ -76,52 +64,52 @@ uint8_t alarm_fl = 0;
 
 typedef enum prog_mode {live_mode, history_mode} prog_mode_t;
 
+/**
+ * \brief Zbior zmiennych na potrzeby podprogramu 'live mode'.
+ */
 typedef struct hmdata{
 	bool history_loaded;
 	uint8_t *msrm_history;
 
 } hmdata_t;
 
+/**
+ * \brief Zbior zmiennych, z ktorych korzystaja wszystkie podprogramy i programy dzialajace w tle.
+ */
 typedef struct prgsdata{
 	prog_mode_t which_program;
 	hmdata_t *hmdt;
-
+	char line[MAXTXTLEN];
 } prgsdata_t;
 
-static char line[MAXTXTLEN];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-void checkFlags();
+void chck_wchdog_fl();
 void live_mode_prog();
 void history_mode_prog(hmdata_t *hmdt);
-void load_history_from_eeprom(uint8_t[]);
-void printHistory(uint8_t[]);
+void print_history(uint8_t[]);
 void write_all_history_to_eeprom(uint8_t[]);
-void save_history_to_eeprom(uint8_t msrm[HISTORY_NUMS*HISTORY_ROW_SIZE]);
 void fflush_sc_buff(prgsdata_t *prgs);
-void setDate(int dd, int mm, int yy);
-void setTime(int hh, int mm);
-void clrTxtBuff(char* str, int size);
-void prsCmd(prgsdata_t *prgs, char* cmd);
-void printDate();
-void printTime();
-void printMan();
-void save_entry_to_eeprom(uint8_t* entry, int size);
+void set_date(int dd, int mm, int yy);
+void set_time(int hh, int mm);
+void clrtxtbuff(char* str, int size);
+void prscmd(prgsdata_t *prgs, char* cmd);
+void print_date();
+void print_time();
+void print_man();
 void get_entry(uint8_t *entry);
-void saveEntry();
-void printMem();
-void eraseHis();
+void save_entry();
+void print_mem();
+void erasehis();
 void memr(uint8_t addr);
-void read_eeprom_memcell(uint8_t addr, uint8_t *memcont);
 void set_alarm_m_s(uint8_t min, uint8_t sec);
 void alarm_settings();
 void do_alarm_action();
 void refhis(uint8_t* msrm_history);
 void chprog(prog_mode_t *which_prog);
-void paintScreenBlack();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -164,7 +152,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
-  checkFlags();
+  chck_wchdog_fl();
   lps_init();
   lps_pressure_correction(48);
   printf("\r\n\n *** URUCHOMIENIE URZADZENIA *** \r\n\n");
@@ -177,7 +165,7 @@ int main(void)
 
   HAL_UART_Receive_DMA(&huart1, rx_buf, 1);
 
-  paintScreenBlack();
+  paint_screen_black();
 
   /* USER CODE END 2 */
 
@@ -187,7 +175,7 @@ int main(void)
 
   uint8_t history[HISTORY_NUMS*HISTORY_ROW_SIZE];
   hmdata_t hmdt = {false, history};
-  prgsdata_t prgs = {live_mode, &hmdt};
+  prgsdata_t prgs = {live_mode, &hmdt, {'\0'}};
 
   while (1)
   {
@@ -294,7 +282,7 @@ void history_mode_prog(hmdata_t *hmdt){
 	if(!hmdt->history_loaded){
 		load_history_from_eeprom(hmdt->msrm_history);
 
-		printHistory(hmdt->msrm_history);
+		print_history(hmdt->msrm_history);
 		hmdt->history_loaded = true;
 
 	} else if(hmdt->history_loaded){
@@ -320,96 +308,9 @@ void refhis(uint8_t* msrm_history){
 
 
 
-void load_history_from_eeprom(uint8_t msrm_history[HISTORY_NUMS*HISTORY_ROW_SIZE]){
-	if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, MEM_MSRM_START, I2C_MEMADD_SIZE_8BIT, msrm_history, HISTORY_NUMS*HISTORY_ROW_SIZE, HAL_MAX_DELAY) != HAL_OK)
-							 Error_Handler();
-	while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
-}
-
-void read_eeprom_memcell(uint8_t addr, uint8_t *memcont){
-	if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, addr, I2C_MEMADD_SIZE_8BIT, memcont, sizeof(*memcont), HAL_MAX_DELAY) != HAL_OK)
-							 Error_Handler();
-	while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
-}
-
 /**
- * \brief Zapisuje podana historie pomiarow w EEPROM
- *
- * Wykorzystuje stronicowanie przesylu informacji. EEPROM 24AA01 na 6 stronie datasheetu
- * opisuje tryb stronicowania. Najwazniejsze ograniczenia to:
- * - strona liczy do 8 byte'ow (tyle ma wewn. buffor pamieci)
- * - jesli wysylane mniej niz 8 byte'ow to wskaznik kolejnej strony bedzie i tak wskazywal na 8 byte (wewn. inkremantacja o 8 byte'ow)
- * - transmisje mozna zaczac tylko od 0x00 i kolejnych stron wskazywanych przez multiplikacje 8 byte'ów przez liczbe calkowita (nie mozna zaczac np. od adresu 0x1)
- *
- * Funkcja wysyla cala historie dzielac ja na pelne strony (8 byte'owe). Strona mniejsza niz 8 byte'ow wysylana jest na koncu.
- *
- * \param msrm tablica z pomiarami
+ * \brief Wystawia w tablicy entry bieżący odczyt daty, czasu i temperatury
  */
-void save_history_to_eeprom(uint8_t msrm[HISTORY_NUMS*HISTORY_ROW_SIZE]){
-
-	// calculate number of full pages and size of the last page
-	int full_pages = HISTORY_ROW_SIZE*HISTORY_NUMS/EEPROM_PAGE_SIZE;
-	int last_page = HISTORY_ROW_SIZE*HISTORY_NUMS - full_pages*EEPROM_PAGE_SIZE;
-
-	// send full pages
-	for(int i=0; i<full_pages; i++){
-
-		if(HAL_I2C_Mem_Write(&hi2c1, 0xa0, MEM_MSRM_START+i*EEPROM_PAGE_SIZE, I2C_MEMADD_SIZE_8BIT, msrm+i*EEPROM_PAGE_SIZE, EEPROM_PAGE_SIZE, HAL_MAX_DELAY) != HAL_OK)
-			Error_Handler();
-		while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
-
-	}
-
-	// send remaining page (not full)
-	if(last_page >0){
-		if(HAL_I2C_Mem_Write(&hi2c1, 0xa0, MEM_MSRM_START+full_pages*EEPROM_PAGE_SIZE, I2C_MEMADD_SIZE_8BIT, msrm+full_pages*EEPROM_PAGE_SIZE, last_page, HAL_MAX_DELAY) != HAL_OK)
-			Error_Handler();
-		while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
-	}
-
-	uint8_t mem_ptr = 0x0;
-
-	// set mem pointer
-	HAL_I2C_Mem_Write(&hi2c1, 0xa0, 0x7F, I2C_MEMADD_SIZE_8BIT, &mem_ptr, 1, HAL_MAX_DELAY);
-
-}
-
-/** \brief Zapisuje podana ilosc byte'ow informacji do pamieci historii
- *
- *  Zapisuje w kolejnym dostepnym miejscu dane. Miejsce wskazywane jest w pamieci EEPROM w
- *  miejscu MEM_POINTER. Po zapisie do pamieci aktualizuje wskaznik pamieci MEM_POINTER
- *
- *  \param entry dane (domyslnie uzywany do zapisu linii informacji data+czas+odczyt temp)
- *  \param size	rozmiar danych w byte'ach
- */
-void save_entry_to_eeprom(uint8_t* entry, int size){
-
-	uint8_t mem_ptr;
-
-	// get mem pointer
-	if(HAL_I2C_Mem_Read(&hi2c1, 0xa0, MEM_POINTER, I2C_MEMADD_SIZE_8BIT, &mem_ptr, 1, HAL_MAX_DELAY) != HAL_OK)
-							 Error_Handler();
-	while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
-
-	// write to mem
-	for(int i=0; i<size; i++){
-		uint8_t tmp[2] = {mem_ptr, *(entry+i)};
-		HAL_I2C_Master_Transmit(&hi2c1, 0xa0, tmp, sizeof tmp, HAL_MAX_DELAY);
-		while(HAL_I2C_IsDeviceReady(&hi2c1, 0xa0, 1, HAL_MAX_DELAY) != HAL_OK);
-		mem_ptr++;
-	}
-
-	// set mem pointer (zeruj jesli wystapilo przekroczenie zakresu historii: 5 pomiarow)
-	if(mem_ptr > (MEM_MSRM_START+HISTORY_ROW_SIZE*HISTORY_NUMS)-1){
-		mem_ptr = 0;
-	}
-
-	// write mem pointer to mem
-	HAL_I2C_Mem_Write(&hi2c1, 0xa0, 0x7F, I2C_MEMADD_SIZE_8BIT, &mem_ptr, 1, HAL_MAX_DELAY);
-
-
-}
-
 void get_entry(uint8_t *entry){
 
 	RTC_TimeTypeDef mTime;
@@ -433,7 +334,7 @@ void get_entry(uint8_t *entry){
 }
 
 
-void printHistory(uint8_t msrm_history[HISTORY_NUMS*EEPROM_PAGE_SIZE]){
+void print_history(uint8_t msrm_history[HISTORY_NUMS*EEPROM_PAGE_SIZE]){
 	for(int i=0; i<HISTORY_NUMS; i++){
 		for(int j=0; j<HISTORY_ROW_SIZE; j++){
 			printf("%d ", msrm_history[i*HISTORY_ROW_SIZE+j]);
@@ -442,7 +343,7 @@ void printHistory(uint8_t msrm_history[HISTORY_NUMS*EEPROM_PAGE_SIZE]){
 	}
 }
 
-void checkFlags(){
+void chck_wchdog_fl(){
 	if(__HAL_RCC_GET_FLAG(RCC_FLAG_IWDGRST)){
 			printf("System zostal zresetowany przez Watchdoga\r\n");
 			__HAL_RCC_CLEAR_RESET_FLAGS();
@@ -451,9 +352,7 @@ void checkFlags(){
 		}
 }
 
-/*
- * ____ W funkcji trzeba poprawic korzystanie z globalnej zmiennej ____ line ____
- */
+
 void fflush_sc_buff(prgsdata_t *prgs){
 
 
@@ -462,13 +361,13 @@ void fflush_sc_buff(prgsdata_t *prgs){
 		int i=0;
 		while(sf_buf[i]!='\0'){
 			if(sf_buf[i]!='\r'){
-				strncat(line, (char *)&sf_buf[i], 1);
+				strncat(prgs->line, (char *)&sf_buf[i], 1);
 			}
 
 			if(sf_buf[i]=='\r') {
 				printf("\n");
-				prsCmd(prgs, line);
-				clrTxtBuff(line, MAXTXTLEN);
+				prscmd(prgs, prgs->line);
+				clrtxtbuff(prgs->line, MAXTXTLEN);
 			}
 
 			printf("%c", sf_buf[i]);
@@ -479,13 +378,13 @@ void fflush_sc_buff(prgsdata_t *prgs){
 	}
 }
 
-void clrTxtBuff(char* str, int size){
+void clrtxtbuff(char* str, int size){
 	for(int i=0; i<size; i++){
 		str[i] = '\0';
 	}
 }
 
-void prsCmd(prgsdata_t *prgs, char* cmd){
+void prscmd(prgsdata_t *prgs, char* cmd){
 	char inst[10];
 	int offset=0;
 
@@ -494,34 +393,34 @@ void prsCmd(prgsdata_t *prgs, char* cmd){
 	if( strcmp(inst, "setdate" ) == 0){
 		int d,m,y;
 		sscanf(cmd+offset, "%d/%d/%d", &d, &m, &y);
-		setDate(d,m,y);
+		set_date(d,m,y);
 
 	}
 	else if( strcmp(inst, "settime" ) == 0){
 		int h,m;
 		sscanf(cmd+offset, "%d:%d", &h, &m);
-		setTime(h, m);
+		set_time(h, m);
 	}
 
-	else if( strcmp(inst, "printtime" ) == 0){
-		printTime();
+	else if( strcmp(inst, "print_time" ) == 0){
+		print_time();
 	}
 
-	else if( strcmp(inst, "printdate" ) == 0){
-		printDate();
+	else if( strcmp(inst, "print_date" ) == 0){
+		print_date();
 	}
 
 	else if( strcmp(inst, "man" ) == 0){
-		printMan();
+		print_man();
 	}
 	else if( strcmp(inst, "save" ) == 0){
-		saveEntry();
+		save_entry();
 	}
-	else if( strcmp(inst, "printmem" ) == 0){
-		printMem();
+	else if( strcmp(inst, "print_mem" ) == 0){
+		print_mem();
 	}
 	else if( strcmp(inst, "erasemem" ) == 0){
-		eraseHis();
+		erasehis();
 	}
 	else if( strcmp(inst, "memr" ) == 0){
 		int addr;
@@ -547,7 +446,7 @@ void memr(uint8_t addr){
 	printf("%x %d\r\n", addr, cont);
 }
 
-void eraseHis(){
+void erasehis(){
 	uint8_t msrm[HISTORY_NUMS*HISTORY_ROW_SIZE];
 
 	for(int i=0; i<HISTORY_NUMS*HISTORY_ROW_SIZE; i++)
@@ -555,14 +454,14 @@ void eraseHis(){
 	save_history_to_eeprom(msrm);
 }
 
-void printMem(){
+void print_mem(){
 	uint8_t msrm_history[HISTORY_NUMS*HISTORY_ROW_SIZE];
 
-	load_history_from_eeprom(msrm_history); // tu jest blad
-	printHistory(msrm_history);				// tu jest blad
+	load_history_from_eeprom(msrm_history);
+	print_history(msrm_history);
 }
 
-void saveEntry(){
+void save_entry(){
 	uint8_t entry[HISTORY_ROW_SIZE];
 	get_entry(entry); // czy ja tutaj nie potrzebuje zaalokowac sobie 7 komorek pamieci?
 	save_entry_to_eeprom(entry,HISTORY_ROW_SIZE);
@@ -571,15 +470,10 @@ void saveEntry(){
 void chprog(prog_mode_t *which_prog){
 	if(*which_prog == live_mode) *which_prog = history_mode;
 	else if(*which_prog == history_mode) *which_prog = live_mode;
-	paintScreenBlack();
+	paint_screen_black();
 }
 
-void paintScreenBlack(){
-	lcd_fill_box(0, 0, LCD_WIDTH, LCD_HEIGHT, BLACK);
-}
-
-
-void printMan(){
+void print_man(){
 	printf("\r\n ***** CONSOLE MANUAL ****** \r\n\n");
 	printf("setdate dd/mm/yy\r\n");
 	printf("settime hh:mm\r\n");
@@ -595,7 +489,7 @@ void printMan(){
 	printf("\r\n ***************************\r\n\n");
 }
 
-void setDate(int dd, int mm, int yy){
+void set_date(int dd, int mm, int yy){
 
 	RTC_DateTypeDef tmp = {0};
 
@@ -606,7 +500,7 @@ void setDate(int dd, int mm, int yy){
 	HAL_RTC_SetDate(&hrtc, &tmp, RTC_FORMAT_BIN);
 }
 
-void setTime(int hh, int mm){
+void set_time(int hh, int mm){
 	RTC_TimeTypeDef tmp = {0};
 
 	tmp.Hours = hh;
@@ -618,7 +512,7 @@ void setTime(int hh, int mm){
 
 
 
-void printDate(){
+void print_date(){
 	RTC_TimeTypeDef mTime;
 	RTC_DateTypeDef mDate;
 
@@ -629,7 +523,7 @@ void printDate(){
 
 }
 
-void printTime(){
+void print_time(){
 	RTC_TimeTypeDef mTime;
 	RTC_DateTypeDef mDate;
 
@@ -639,6 +533,9 @@ void printTime(){
   	printf("Time: %d:%d\r\n", mTime.Hours, mTime.Minutes);
 }
 
+/** \brief Ustawia alarm w trybie przerwan dla podanej min i sec
+ *
+ */
 void set_alarm_m_s(uint8_t min, uint8_t sec){
 
 	  RTC_AlarmTypeDef alarm;
@@ -658,18 +555,24 @@ void set_alarm_m_s(uint8_t min, uint8_t sec){
 	  HAL_RTC_SetAlarm_IT(&hrtc, &alarm, RTC_FORMAT_BIN);
 }
 
+/** \brief Wykonanie akcji zwiazanej z podniesiona flaga alarmu RTC
+ *
+ */
 void alarm_settings(){
 
 	if(alarm_fl == 1){
-		alarm_fl++;
+		alarm_fl++; // do usuniecia?
 		do_alarm_action();
 		alarm_fl = 0;
 	}
 
 }
 
+/**
+ * \brief Wykonuje akcje przypisana do alarmu
+ */
 void do_alarm_action(){
-	saveEntry();
+	save_entry();
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){

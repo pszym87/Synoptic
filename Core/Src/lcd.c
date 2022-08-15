@@ -1,7 +1,7 @@
 /**
  * \file lcd.c
  *
- * \brief Biblioteka obslugujaca wyswietlacz TFT
+ * \brief Biblioteka obslugujaca wyswietlacz TFT ST7735S
  *  Created on: Jun 10, 2022
  *      Author: pszymanski
  */
@@ -195,3 +195,9 @@ void lcd_draw_image_fast(int x, int y, int width, int height, uint8_t *data){
 	HAL_SPI_Transmit(&hspi2, data, width*height*2, HAL_MAX_DELAY);
 	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET);
 }
+
+
+void paint_screen_black(){
+	lcd_fill_box(0, 0, LCD_WIDTH, LCD_HEIGHT, BLACK);
+}
+

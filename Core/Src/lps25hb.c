@@ -1,7 +1,8 @@
-/*
- * lps25hb.c
+/**
+ * \file lps25hb.c
  *
- *  Created on: Jun 20, 2022
+ * \brief Biblioteka obslugujaca czujnik ciśnienia atmosferycznego LPS25HB
+ *  Created on: Jun 10, 2022
  *      Author: pszymanski
  */
 
@@ -12,8 +13,18 @@
 #include <stdlib.h>
 #include <math.h>
 
+/**
+ * \defgroup Rejestry_LPS25HB
+ *
+ * \brief Kody HEX najczesciej uzywanych kolorów
+ */
 
-#define LPS25HB_ADDR				0xBA	// Adres urzadzenia
+/** \addtogroup Rejestry_LPS25HB
+ *
+ * \brief
+ * @{
+ */
+#define LPS25HB_ADDR				0xBA	///Adres urzadzenia
 #define REF_P_XL 					0x08	// Reference pressure register
 #define REF_P_L						0x09	// Reference pressure register
 #define REF_P_H						0x0A	// Reference pressure register
@@ -37,8 +48,10 @@
 #define THS_P_H						0x31	// Pressure threshold register
 #define RPDS_L						0x39	// Pressure offset register
 #define RPDS_H						0x3A	// Pressure offset register
+/** @}*/
 
 // Stałe symboliczne ulatwiajace ustawienia konkretnych rejestrow
+
 
 // CTRL_REG1
 #define SET_CTRL_REG1_PD			0x80

@@ -1,0 +1,10 @@
+/**
+ * \mainpage Synoptic
+ * 
+ * Dokumentacja do projektu Synoptic
+ * Pliki źródłowe znajdują się w repozytorium: https://github.com/pszym87/Synoptic
+ * Więcej informacji o projekcie w pliku README.md 
+ * Komponenty systemu
+ * ------------------
+ * Ponizej przyporzadkowanie najwazniejszych komponentow (funkcje i zmienne globalne) w grupy i pliki \image html components.jpg "Komponenty"
+ */

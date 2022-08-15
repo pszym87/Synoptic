@@ -1,7 +1,7 @@
 /**
  * \file lps25hb.h
  *
- * \brief Bibioteka obslugujaca czujnik cisnienia LPS25HB
+ * \brief Plik naglowkowy bibioteki obslugujacej czujnik cisnienia LPS25HB
  *
  * 	Komunikacja z czujnikiem po I2C, wskaźnik do struktury &hi2c1 (na sztywno)
  * 	Czujnik umozliwia odczyt temperatury i cisnienia

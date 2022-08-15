@@ -1,17 +1,24 @@
 /**
  * \file lcd.h
  *
- * \brief Biblioteka osblugujaca wyswietlacz TFT ST7735S
- *
- * Komunikacja z wyswietlaczem po SPI
- *  Created on: Jun 10, 2022
- *      Author: pszymanski
+ * \brief Plik naglowkowy biblioteki osblugujacej wyswietlacz TFT ST7735S
  */
 
 #ifndef INC_LCD_H_
 #define INC_LCD_H_
 
+/**
+ * \defgroup KOLORY
+ *
+ * \brief Kody HEX najczesciej uzywanych kolorów
+ */
+
+/** \addtogroup KOLORY
+ * @{
+ */
 #define BLACK     0x0000
+
+/// \ingroup KOLORY
 #define RED       0xf800
 #define GREEN     0x02C5
 #define BLUE      0x001f
@@ -19,6 +26,7 @@
 #define MAGENTA   0xf81f
 #define CYAN      0x07ff
 #define WHITE     0xffff
+/** @}*/
 #define LCD_WIDTH	160
 #define LCD_HEIGHT	128
 
@@ -111,5 +119,13 @@ void lcd_draw_image_fast(int x, int y, int width, int height, uint8_t *data);
  * \param color kolor (w wartosci 16 bitowej)
  */
 void lcd_fill_box_fast(int x, int y, int width, int height, uint16_t color);
+
+/**
+ * \brief Maluje ekran na czarno
+ *
+ * Funkcja pomocnicza zwiekszajaca czytelnosc kodu. Przemalowuje ekran na czarno.
+ * Przydatna przy odswiezaniu ekranu gdy malowana jest zupelnie nowa zawartosc
+ */
+void paint_screen_black();
 
 #endif /* INC_LCD_H_ */
