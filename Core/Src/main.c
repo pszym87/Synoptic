@@ -1,10 +1,20 @@
+/* USER CODE BEGIN Header */
 /**
- * \file main.c
- *
- * \brief Glowna petla programu wraz ze sterowaniem
- *      Author: pszymanski
- */
-
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2022 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -145,9 +155,9 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_I2C1_Init();
   MX_SPI2_Init();
-  MX_DMA_Init();
   MX_IWDG_Init();
   MX_USART1_UART_Init();
   MX_RTC_Init();
@@ -584,6 +594,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc){
 	printf("Alarm!\r\n");
 	alarm_fl++;
+}
+
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi){
+	if(hspi == &hspi2){
+		lcd_transfer_completed();
+	}
 }
 
 /* USER CODE END 4 */

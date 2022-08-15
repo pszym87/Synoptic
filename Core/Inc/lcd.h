@@ -33,6 +33,7 @@
 #pragma once
 
 #include "stdint.h"
+#include <stdbool.h>
 
 /**
  * \brief Wybudzenie wyswietlacza i wstepna konfiguracja
@@ -95,16 +96,16 @@ void lcd_draw_point(int x, int y, uint16_t color);
 void lcd_draw_image(int x, int y, int width, int height, uint8_t *data);
 
 /**
- * \brief Rysuje obrazek zakodowany jako TFF 16-bit (tryb szybki)
+ * \brief Draws a TFF 16 bit image on the screen via SPI in the DMA mode.
  *
- * Obraz mozna zakodowac w TFF w aplikacji https://lvgl.io/tools/imageconverter
- * Metoda szybka - przesylany jest do wyswietlacza caly "zbuforowany" obrazek
+ * Use the following web application to convert your image into the array - https://lvgl.io/tools/imageconverter
  *
- * \param x koordynat poczatkowy os X
- * \param y koordynat poczatkowy os Y
- * \param width szerokosc obrazka
- * \param width wysokosc obrazka
- * \param data obrazek zakodowany jako tablica TFF
+ *
+ * \param x x-coordinate of the top-left pixel of the image
+ * \param y y-coordinate of the top left pixel of the image
+ * \param width image width
+ * \param width image height
+ * \param data an image encoded as a 1-dimensional matrix
  */
 void lcd_draw_image_fast(int x, int y, int width, int height, uint8_t *data);
 
@@ -127,5 +128,19 @@ void lcd_fill_box_fast(int x, int y, int width, int height, uint16_t color);
  * Przydatna przy odswiezaniu ekranu gdy malowana jest zupelnie nowa zawartosc
  */
 void paint_screen_black();
+
+/**
+ * \brief Checks if SPI line is busy
+ *
+ * DMA auxiliary function
+ * \return IF busy returns TRUE, otherwise returns FALSE
+ */
+bool lcd_is_spi_busy();
+
+/** \brief Sets the CS line free (=sets to the idle state)
+ *
+ * DMA auxiliary function
+ */
+void lcd_transfer_completed();
 
 #endif /* INC_LCD_H_ */

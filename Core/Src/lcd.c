@@ -8,6 +8,7 @@
 
 #include "lcd.h"
 #include "spi.h"
+#include <stdio.h>
 
 #define ST7735S_INVON			0x21
 #define ST7735S_INVOFF			0x20
@@ -180,6 +181,12 @@ void lcd_draw_image(int x, int y, int width, int height, uint8_t *data){
 
 void lcd_draw_image_fast(int x, int y, int width, int height, uint8_t *data){
 
+	// Wait for the SPI to complete the DMA transfer
+	while(lcd_is_spi_busy()) {
+		;// do nothing
+	}
+
+	// Set a window for drawing
 	lcd_cmd(ST7735S_CASET);
 	lcd_data16(x);
 	lcd_data16(x+width-1);
@@ -189,11 +196,14 @@ void lcd_draw_image_fast(int x, int y, int width, int height, uint8_t *data){
 	lcd_data16(y+height-1);
 
 	lcd_cmd(ST7735S_RAMWR);
+
+	// Prepare lines
 	HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET);
 
-	HAL_SPI_Transmit(&hspi2, data, width*height*2, HAL_MAX_DELAY);
-	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET);
+	// Transmit the data in the DMA mode. When it finishes, ISR will call the HAL_SPI_TxCpltCallback function to set the LCD_CS pin to HIGH (=idle state)
+	HAL_SPI_Transmit_DMA(&hspi2, data, width*height*2);
+
 }
 
 
@@ -201,3 +211,14 @@ void paint_screen_black(){
 	lcd_fill_box(0, 0, LCD_WIDTH, LCD_HEIGHT, BLACK);
 }
 
+bool lcd_is_spi_busy(){
+
+	if(HAL_SPI_GetState(&hspi2) == HAL_SPI_STATE_BUSY_TX)
+		return true;
+	else
+		return false;
+}
+
+void lcd_transfer_completed(){
+	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET);
+}
