@@ -19,7 +19,7 @@ Synoptic offers basic interaction between system components and the final user. 
 - RTC for time stamp generation and setting the alarm time
 - Watchdog
 
-Microcontroller uses **I2C** protocol to communicate with EEPROM and LPS25HB (they share SDA and SCL lines), **SPI** for TFT display and **UART** for debugging.
+Microcontroller uses **I2C** protocol to communicate with EEPROM and LPS25HB (they share SDA and SCL lines), **SPI** for TFT display and **UART** for debugging. DMA mode is utilized for: sending images to the display and receiving data from the serial port console via UART. 
 
 ## Circuit Diagram and Connections
 
